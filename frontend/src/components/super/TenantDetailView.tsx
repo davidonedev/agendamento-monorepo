@@ -111,32 +111,33 @@ export default function TenantDetailView() {
 
   const handleEdit = async () => {
     if (!editForm) return;
+    const form = editForm;
     setEditError('');
     setSaving(true);
     try {
       await updateTenant(tenant.id, {
-        name: editForm.name,
-        ownerName: editForm.ownerName,
-        phone: editForm.phone || undefined,
-        address: editForm.address || undefined,
-        plan: editForm.plan,
-        monthlyPrice: parseFloat(editForm.monthlyPrice) || 0,
-        primaryColor: editForm.primaryColor,
-        status: editForm.status,
+        name: form.name,
+        ownerName: form.ownerName,
+        phone: form.phone || undefined,
+        address: form.address || undefined,
+        plan: form.plan,
+        monthlyPrice: parseFloat(form.monthlyPrice) || 0,
+        primaryColor: form.primaryColor,
+        status: form.status,
       });
       // Atualiza o detalhe local sem refetch
       setDetail(prev => prev ? {
         ...prev,
         tenant: {
           ...prev.tenant,
-          name:         editForm.name,
-          ownerName:    editForm.ownerName,
-          phone:        editForm.phone || null,
-          address:      editForm.address || null,
-          plan:         editForm.plan,
-          monthlyPrice: parseFloat(editForm.monthlyPrice) || 0,
-          primaryColor: editForm.primaryColor,
-          status:       editForm.status,
+          name:         form.name,
+          ownerName:    form.ownerName,
+          phone:        form.phone || '',
+          address:      form.address || '',
+          plan:         form.plan,
+          monthlyPrice: parseFloat(form.monthlyPrice) || 0,
+          primaryColor: form.primaryColor,
+          status:       form.status,
         },
       } : prev);
       setEditOpen(false);
