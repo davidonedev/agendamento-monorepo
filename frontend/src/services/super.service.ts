@@ -66,3 +66,25 @@ export async function updateTenantApi(
 export async function deleteTenantApi(id: string): Promise<void> {
   return api.delete(`/super/tenants/${id}`);
 }
+
+// ─── Usuários (admins + profissionais) ────────────────────────────────────────
+export interface PlatformUser {
+  id: string;
+  name: string;
+  email: string;
+  role: 'tenant_admin' | 'professional';
+  tenantId: string | null;
+  tenant: { name: string; slug: string } | null;
+}
+
+export async function listUsersApi(): Promise<PlatformUser[]> {
+  return api.get<PlatformUser[]>('/super/users');
+}
+
+export async function updateUserEmailApi(id: string, email: string): Promise<PlatformUser> {
+  return api.patch<PlatformUser>(`/super/users/${id}/email`, { email });
+}
+
+export async function forceChangePasswordApi(id: string, newPassword: string): Promise<void> {
+  return api.put(`/super/users/${id}/password`, { newPassword });
+}

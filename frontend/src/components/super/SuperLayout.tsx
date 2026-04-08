@@ -1,16 +1,19 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { NavLink, useNavigate, Outlet } from 'react-router-dom';
-import { LayoutDashboard, Building2, BarChart3, LogOut, Menu, X, Scissors, Sun, Moon, Shield } from 'lucide-react';
+import { LayoutDashboard, Building2, BarChart3, LogOut, Menu, X, Scissors, Sun, Moon, Shield, UserCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/hooks/useTheme';
+import { hexToHslVars } from '@/lib/utils';
+import { getSuperColor } from './SuperSettingsView';
 
 const NAV = [
-  { to: '/super/dashboard', label: 'Dashboard',  icon: LayoutDashboard },
-  { to: '/super/tenants',   label: 'Tenants',    icon: Building2        },
-  { to: '/super/metrics',   label: 'Métricas',   icon: BarChart3        },
+  { to: '/super/dashboard', label: 'Dashboard',   icon: LayoutDashboard },
+  { to: '/super/tenants',   label: 'Tenants',     icon: Building2        },
+  { to: '/super/metrics',   label: 'Métricas',    icon: BarChart3        },
+  { to: '/super/account',   label: 'Minha conta', icon: UserCircle       },
 ];
 
 export default function SuperLayout() {
@@ -18,6 +21,37 @@ export default function SuperLayout() {
   const { isDark, toggle } = useTheme();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const [primaryColor, setPrimaryColor] = useState(getSuperColor);
+
+  // Aplica a cor como CSS var — igual ao AdminLayout
+  useEffect(() => {
+    const apply = (color: string) => {
+      const { hsl, isLight } = hexToHslVars(color);
+      const fgHsl = isLight ? '222 47% 11%' : '0 0% 100%';
+      const root = document.documentElement;
+      root.style.setProperty('--primary', hsl);
+      root.style.setProperty('--primary-foreground', fgHsl);
+      root.style.setProperty('--ring', hsl);
+    };
+
+    apply(primaryColor);
+
+    // Ouve mudanças feitas na página de configurações sem reload
+    const handler = (e: Event) => {
+      const color = (e as CustomEvent<string>).detail;
+      setPrimaryColor(color);
+      apply(color);
+    };
+    window.addEventListener('super-color-change', handler);
+
+    return () => {
+      window.removeEventListener('super-color-change', handler);
+      const root = document.documentElement;
+      root.style.removeProperty('--primary');
+      root.style.removeProperty('--primary-foreground');
+      root.style.removeProperty('--ring');
+    };
+  }, [primaryColor]);
 
   const handleLogout = () => { logout(); navigate('/login', { replace: true }); };
 

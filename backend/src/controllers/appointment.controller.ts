@@ -13,7 +13,7 @@ const createAppointmentSchema = z.object({
   professionalId: z.string().uuid(),
   serviceId: z.string().uuid(),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato: YYYY-MM-DD'),
-  startTime: z.string().regex(/^\d{2}:\d{2}$/, 'Formato: HH:mm'),
+  startTime: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/, 'Formato: HH:mm').transform(t => t.slice(0, 5)),
   notes: z.string().max(500).optional(),
 });
 

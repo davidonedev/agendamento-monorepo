@@ -12,6 +12,7 @@ import SuperDashboard        from './components/super/SuperDashboard';
 import TenantsView           from './components/super/TenantsView';
 import TenantDetailView      from './components/super/TenantDetailView';
 import PlatformMetricsView   from './components/super/PlatformMetricsView';
+import SuperAccountView      from './components/super/SuperAccountView';
 import AdminLayout           from './components/layout/AdminLayout';
 import ProfessionalLayout    from './components/layout/ProfessionalLayout';
 import ClientLayout          from './components/layout/ClientLayout';
@@ -70,6 +71,7 @@ function AppRoutes() {
         <Route path="tenants"     element={<TenantsView />} />
         <Route path="tenants/:tenantId" element={<TenantDetailView />} />
         <Route path="metrics"     element={<PlatformMetricsView />} />
+        <Route path="account"     element={<SuperAccountView />} />
       </Route>
 
       {/* Tenant admin */}

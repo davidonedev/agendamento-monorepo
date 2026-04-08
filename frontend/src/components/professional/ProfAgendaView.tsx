@@ -16,6 +16,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useProfessional } from '@/context/ProfessionalContext';
 import { formatCurrency } from '@/lib/utils';
+import { AppointmentCardList, type ApptCardData } from '@/components/ui/AppointmentCards';
 import type { Appointment, AppointmentStatus } from '@/types';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -219,12 +220,19 @@ export default function ProfAgendaView() {
         professionalId: professional.id,
         serviceId:      apptForm.serviceId,
         date:           apptForm.date,
-        startTime:      apptForm.startTime,
-        notes:          apptForm.notes || undefined,
+        startTime:      apptForm.startTime.slice(0, 5),
+        notes:          apptForm.notes.trim() || undefined,
       });
       setApptDialog(false);
       setApptForm(emptyForm());
     } catch (err) {
+      if (err && typeof err === 'object' && 'details' in err) {
+        const details = (err as { details?: { field: string; message: string }[] }).details;
+        if (details?.length) {
+          setApptError(details.map(d => `${d.field}: ${d.message}`).join(' | '));
+          return;
+        }
+      }
       setApptError(err instanceof Error ? err.message : 'Erro ao criar agendamento.');
     }
   };
@@ -363,8 +371,8 @@ export default function ProfAgendaView() {
             )}
           </div>
 
-          {/* Table */}
-          <Card>
+          {/* Tabela — visível apenas em telas médias+ */}
+          <Card className="hidden md:block">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -400,6 +408,31 @@ export default function ProfAgendaView() {
               </table>
             </div>
           </Card>
+
+          {/* Cards — visível apenas em mobile */}
+          <div className="md:hidden">
+            <AppointmentCardList
+              appointments={tableFiltered.map((a): ApptCardData => {
+                const client  = clients.find(c => c.id === a.clientId);
+                const svc     = services.find(s => s.id === a.serviceId);
+                return {
+                  id: a.id,
+                  date: a.date,
+                  startTime: a.startTime,
+                  endTime: a.endTime,
+                  status: a.status,
+                  price: a.price,
+                  notes: a.notes,
+                  clientName: client?.name,
+                  clientPhone: client?.phone,
+                  serviceName: svc?.name,
+                  serviceDuration: svc?.duration,
+                  // sem professionalName — é a agenda do próprio profissional
+                };
+              })}
+              onSave={handleStatusSave}
+            />
+          </div>
         </div>
       )}
 

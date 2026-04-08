@@ -238,7 +238,7 @@ const publicBookingSchema = z.object({
   serviceId:  z.string().optional(),
   serviceIds: z.array(z.string()).optional(),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato: YYYY-MM-DD'),
-  startTime: z.string().regex(/^\d{2}:\d{2}$/, 'Formato: HH:mm'),
+  startTime: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/, 'Formato: HH:mm').transform(t => t.slice(0, 5)),
   clientName: z.string().min(2).max(100),
   clientEmail: z.string().email(),
   clientPhone: z.string().optional(),

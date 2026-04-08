@@ -50,8 +50,8 @@ export default function BookingFlow() {
   const { data, products: upsellProducts, addAppointment, getSlug } = usePublicTenant();
   const { services, professionals, tenant } = data;
 
-  const navigate   = useNavigate();
-  const location   = useLocation();
+  const navigate = useNavigate();
+  const location = useLocation();
   const preService = (location.state as { serviceId?: string } | null)?.serviceId;
 
   const [step, setStep] = useState<Step>(preService ? 'professional' : 'service');
@@ -61,27 +61,27 @@ export default function BookingFlow() {
     preService ? (services.find(s => s.id === preService) ? [services.find(s => s.id === preService)!] : []) : [],
   );
 
-  const [selProf,     setSelProf]     = useState<Professional | null>(null);
-  const [selDate,     setSelDate]     = useState<Date | null>(null);
-  const [selSlot,     setSelSlot]     = useState<string | null>(null);
-  const [info,        setInfo]        = useState({ name: '', email: '', phone: '' });
-  const [dateOffset,  setDateOffset]  = useState(0);
-  const [doneAppts,   setDoneAppts]   = useState<Appointment[]>([]);
-  const [submitting,  setSubmitting]  = useState(false);
+  const [selProf, setSelProf] = useState<Professional | null>(null);
+  const [selDate, setSelDate] = useState<Date | null>(null);
+  const [selSlot, setSelSlot] = useState<string | null>(null);
+  const [info, setInfo] = useState({ name: '', email: '', phone: '' });
+  const [dateOffset, setDateOffset] = useState(0);
+  const [doneAppts, setDoneAppts] = useState<Appointment[]>([]);
+  const [submitting, setSubmitting] = useState(false);
   const [bookingError, setBookingError] = useState('');
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
-  const [loadingSlots,   setLoadingSlots]   = useState(false);
-  const [slotsError,     setSlotsError]     = useState('');
+  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [slotsError, setSlotsError] = useState('');
 
-  const today          = startOfDay(new Date());
-  const brasiliaNow    = nowBrasilia();
-  const dates          = Array.from({ length: 14 }, (_, i) => addDays(today, i + dateOffset));
+  const today = startOfDay(new Date());
+  const brasiliaNow = nowBrasilia();
+  const dates = Array.from({ length: 14 }, (_, i) => addDays(today, i + dateOffset));
   const categories = [...new Set(services.map(s => s.category))];
 
   // Cálculos derivados dos serviços selecionados
   const totalDuration = selSvcs.reduce((s, v) => s + v.duration, 0);
-  const totalPrice    = selSvcs.reduce((s, v) => s + v.price, 0);
-  const similarPair   = findSimilarPair(selSvcs);
+  const totalPrice = selSvcs.reduce((s, v) => s + v.price, 0);
+  const similarPair = findSimilarPair(selSvcs);
 
   // Profissionais que oferecem TODOS os serviços selecionados
   const availProfs = selSvcs.length > 0
@@ -118,8 +118,8 @@ export default function BookingFlow() {
     try {
       const slots = await getAvailableSlotsApi(getSlug(), {
         professionalId: selProf.id,
-        serviceIds:     selSvcs.map(s => s.id),
-        date:           format(date, 'yyyy-MM-dd'),
+        serviceIds: selSvcs.map(s => s.id),
+        date: format(date, 'yyyy-MM-dd'),
       });
       setAvailableSlots(slots);
     } catch (err) {
@@ -137,12 +137,12 @@ export default function BookingFlow() {
     try {
       const appts = await addAppointment({
         professionalId: selProf.id,
-        serviceIds:     selSvcs.map(s => s.id),
-        date:           format(selDate, 'yyyy-MM-dd'),
-        startTime:      selSlot,
-        clientName:     info.name,
-        clientEmail:    info.email,
-        clientPhone:    info.phone || undefined,
+        serviceIds: selSvcs.map(s => s.id),
+        date: format(selDate, 'yyyy-MM-dd'),
+        startTime: selSlot.slice(0, 5),
+        clientName: info.name,
+        clientEmail: info.email,
+        clientPhone: info.phone || undefined,
       });
       setDoneAppts(appts);
       setStep('done');
@@ -169,12 +169,12 @@ export default function BookingFlow() {
   const stepOrder: Step[] = ['service', 'professional', 'datetime', 'info', 'confirm', 'done'];
   const stepIdx = stepOrder.indexOf(step);
   const stepLabels: Record<Step, string> = {
-    service:      'Serviços',
+    service: 'Serviços',
     professional: 'Profissional',
-    datetime:     'Data & Hora',
-    info:         'Seus Dados',
-    confirm:      'Confirmação',
-    done:         'Concluído',
+    datetime: 'Data & Hora',
+    info: 'Seus Dados',
+    confirm: 'Confirmação',
+    done: 'Concluído',
   };
 
   if (!tenant.isOpen) {
@@ -267,7 +267,11 @@ export default function BookingFlow() {
                     <Card
                       key={svc.id}
                       className={`cursor-pointer transition-all hover:shadow-md ${sel ? 'ring-2' : ''}`}
-                      style={sel ? { ringColor: tenant.primaryColor } : {}}
+                      style={
+                        sel
+                          ? { boxShadow: `0 0 0 2px ${tenant.primaryColor}` }
+                          : undefined
+                      }
                       onClick={() => toggleService(svc)}
                     >
                       <CardContent className="flex items-center justify-between p-4">
@@ -399,10 +403,10 @@ export default function BookingFlow() {
             </div>
             <div className="grid grid-cols-7 gap-1">
               {dates.map(date => {
-                const dateStr  = format(date, 'yyyy-MM-dd');
-                const works    = selProf?.workingDays.includes(date.getDay()) ?? false;
-                const isPast   = dateStr < brasiliaNow.date;
-                const isSel    = selDate && dateStr === format(selDate, 'yyyy-MM-dd');
+                const dateStr = format(date, 'yyyy-MM-dd');
+                const works = selProf?.workingDays.includes(date.getDay()) ?? false;
+                const isPast = dateStr < brasiliaNow.date;
+                const isSel = selDate && dateStr === format(selDate, 'yyyy-MM-dd');
                 const disabled = !works || isPast;
                 return (
                   <button
@@ -449,7 +453,7 @@ export default function BookingFlow() {
                     if (!isToday) return null;
                     const advance = tenant.minAdvanceMinutes ?? 0;
                     const [h, m] = brasiliaNow.time.split(':').map(Number);
-                    const total  = h * 60 + m + advance;
+                    const total = h * 60 + m + advance;
                     return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
                   })();
                   const visibleSlots = earliestTime
@@ -510,11 +514,23 @@ export default function BookingFlow() {
               <Input type="email" placeholder="joao@email.com" value={info.email} onChange={e => setInfo(i => ({ ...i, email: e.target.value }))} />
             </div>
             <div className="space-y-1">
-              <Label>Telefone</Label>
-              <Input placeholder="(11) 99999-0000" value={info.phone} onChange={e => setInfo(i => ({ ...i, phone: e.target.value }))} />
+              <Label>Telefone *</Label>
+              <Input
+                placeholder="(00) 00000-0000"
+                value={info.phone}
+                onChange={e => {
+                  const digits = e.target.value.replace(/\D/g, '').slice(0, 11);
+                  let masked = '';
+                  if (digits.length === 0) masked = '';
+                  else if (digits.length <= 2) masked = `(${digits}`;
+                  else if (digits.length <= 7) masked = `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+                  else masked = `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+                  setInfo(i => ({ ...i, phone: masked }));
+                }}
+              />
             </div>
           </div>
-          <Button className="w-full" style={btnStyle} disabled={!info.name || !info.email} onClick={() => setStep('confirm')}>
+          <Button className="w-full" style={btnStyle} disabled={!info.name || !info.email || !info.phone} onClick={() => setStep('confirm')}>
             Revisar
           </Button>
         </div>
@@ -564,10 +580,10 @@ export default function BookingFlow() {
               {/* Detalhes */}
               <div className="space-y-2 text-sm border-t pt-3">
                 {[
-                  ['Data',       format(selDate, "EEEE, d 'de' MMMM", { locale: ptBR })],
-                  ['Início',     selSlot],
-                  ['Duração',    `${totalDuration} min`],
-                  ['Cliente',    info.name],
+                  ['Data', format(selDate, "EEEE, d 'de' MMMM", { locale: ptBR })],
+                  ['Início', selSlot],
+                  ['Duração', `${totalDuration} min`],
+                  ['Cliente', info.name],
                 ].map(([l, v]) => (
                   <div key={l} className="flex justify-between">
                     <span className="text-muted-foreground">{l}</span>

@@ -68,7 +68,7 @@ export default function ServicesPage() {
 
           {/* Logo */}
           {tenant.logoUrl ? (
-            <div className="shrink-0 h-28 w-28 rounded-2xl overflow-hidden border-2 border-white/30 shadow-xl bg-white/10 backdrop-blur-sm">
+            <div className="shrink-0 h-36 w-36 rounded-2xl overflow-hidden border-2 border-white/30 shadow-xl bg-white/10 backdrop-blur-sm">
               <img
                 src={tenant.logoUrl}
                 alt={tenant.name}
@@ -104,9 +104,9 @@ export default function ServicesPage() {
             <div
               className={`
                     flex flex-col items-center
-                    sm:flex-row sm:flex-wrap sm:items-start
+                    sm:flex-col sm:flex-wrap sm:items-start
                     gap-1 sm:gap-x-4 sm:gap-y-1 
-                    mt-1.5 text-sm 
+                    mt-1.5 text-sm
                     ${tenant.bannerUrl ? 'text-white/80' : 'text-muted-foreground'}
                   `}
             >
@@ -116,7 +116,6 @@ export default function ServicesPage() {
                   {tenant.address}
                 </span>
               )}
-
               {tenant.phone && (
                 <span className="flex items-center gap-1.5">
                   <Phone className="h-3.5 w-3.5 shrink-0" />
