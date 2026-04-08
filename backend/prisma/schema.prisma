@@ -144,13 +144,14 @@ model Service {
 }
 
 model Client {
-  id        String   @id @default(uuid())
-  tenantId  String
-  name      String
-  email     String
-  phone     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(uuid())
+  tenantId     String
+  name         String
+  email        String
+  phone        String?
+  passwordHash String?  // null = autenticado via Google
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   appointments Appointment[]

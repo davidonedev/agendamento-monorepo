@@ -1,8 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import { PlatformProvider }        from './context/PlatformContext';
 import { AuthProvider, useAuth }   from './context/AuthContext';
 import { TenantProvider }          from './context/TenantContext';
 import { PublicTenantProvider }    from './context/PublicTenantContext';
+import { PublicClientProvider }   from './context/PublicClientContext';
 import { ProfessionalProvider }    from './context/ProfessionalContext';
 
 // Pages & layouts
@@ -13,6 +15,7 @@ import TenantsView           from './components/super/TenantsView';
 import TenantDetailView      from './components/super/TenantDetailView';
 import PlatformMetricsView   from './components/super/PlatformMetricsView';
 import SuperAccountView      from './components/super/SuperAccountView';
+import PlansView             from './components/super/PlansView';
 import AdminLayout           from './components/layout/AdminLayout';
 import ProfessionalLayout    from './components/layout/ProfessionalLayout';
 import ClientLayout          from './components/layout/ClientLayout';
@@ -31,6 +34,7 @@ import ProductsView          from './components/admin/ProductsView';
 import RemindersView         from './components/admin/RemindersView';
 import ServicesPage          from './components/client/ServicesPage';
 import BookingFlow           from './components/client/BookingFlow';
+import RegisterPage          from './pages/RegisterPage';
 
 // ─── Route guards ─────────────────────────────────────────────────────────────
 function SuperGuard({ children }: { children: React.ReactNode }) {
@@ -71,6 +75,7 @@ function AppRoutes() {
         <Route path="tenants"     element={<TenantsView />} />
         <Route path="tenants/:tenantId" element={<TenantDetailView />} />
         <Route path="metrics"     element={<PlatformMetricsView />} />
+        <Route path="plans"       element={<PlansView />} />
         <Route path="account"     element={<SuperAccountView />} />
       </Route>
 
@@ -103,9 +108,10 @@ function AppRoutes() {
       </Route>
 
       {/* Public client portal — /:tenantSlug */}
-      <Route path=":tenantSlug" element={<PublicTenantProvider><ClientLayout /></PublicTenantProvider>}>
-        <Route index          element={<ServicesPage />} />
-        <Route path="booking" element={<BookingFlow />} />
+      <Route path=":tenantSlug" element={<PublicTenantProvider><PublicClientProvider><ClientLayout /></PublicClientProvider></PublicTenantProvider>}>
+        <Route index            element={<ServicesPage />} />
+        <Route path="booking"   element={<BookingFlow />} />
+        <Route path="register"  element={<RegisterPage />} />
       </Route>
 
       {/* Fallback */}
@@ -114,12 +120,16 @@ function AppRoutes() {
   );
 }
 
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? '';
+
 export default function App() {
   return (
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
     <BrowserRouter>
       <AuthProvider>
         <AppRoutes />
       </AuthProvider>
     </BrowserRouter>
+    </GoogleOAuthProvider>
   );
 }

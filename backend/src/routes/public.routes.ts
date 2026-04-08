@@ -6,6 +6,10 @@ import {
   getPublicProfessionals,
   getAvailableSlots,
   createPublicBooking,
+  loginPublicClient,
+  registerPublicClient,
+  registerPublicProfessional,
+  googleAuthPublicClient,
 } from '../controllers/public.controller';
 import { getPublicProducts } from '../controllers/product.controller';
 
@@ -31,5 +35,17 @@ router.post('/:slug/booking', createPublicBooking);
 
 // GET /api/public/:slug/products — produtos para upsell
 router.get('/:slug/products', getPublicProducts);
+
+// POST /api/public/:slug/login/client — login público de cliente (por e-mail)
+router.post('/:slug/login/client', loginPublicClient);
+
+// POST /api/public/:slug/register/client — cadastro público de cliente
+router.post('/:slug/register/client', registerPublicClient);
+
+// POST /api/public/:slug/register/professional — cadastro público de profissional
+router.post('/:slug/register/professional', registerPublicProfessional);
+
+// POST /api/public/:slug/auth/google — login ou cadastro via Google
+router.post('/:slug/auth/google', googleAuthPublicClient);
 
 export { router as publicRoutes };

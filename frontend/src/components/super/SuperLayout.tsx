@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { NavLink, useNavigate, Outlet } from 'react-router-dom';
-import { LayoutDashboard, Building2, BarChart3, LogOut, Menu, X, Scissors, Sun, Moon, Shield, UserCircle } from 'lucide-react';
+import { LayoutDashboard, Building2, BarChart3, CreditCard, LogOut, Menu, X, Scissors, Sun, Moon, Shield, UserCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +13,7 @@ const NAV = [
   { to: '/super/dashboard', label: 'Dashboard',   icon: LayoutDashboard },
   { to: '/super/tenants',   label: 'Tenants',     icon: Building2        },
   { to: '/super/metrics',   label: 'Métricas',    icon: BarChart3        },
+  { to: '/super/plans',     label: 'Planos',      icon: CreditCard       },
   { to: '/super/account',   label: 'Minha conta', icon: UserCircle       },
 ];
 

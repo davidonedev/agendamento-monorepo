@@ -6,15 +6,15 @@ import { AlertTriangle, ChevronLeft, ChevronRight, CheckCircle, Loader2, X, Shop
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { usePublicTenant } from '@/context/PublicTenantContext';
+import { usePublicClient } from '@/context/PublicClientContext';
 import { formatCurrency } from '@/lib/utils';
 import { getAvailableSlotsApi } from '@/services/public.service';
+import BookingAuthGate from './BookingAuthGate';
 import type { Appointment, Service, Professional } from '@/types';
 
-type Step = 'service' | 'professional' | 'datetime' | 'info' | 'confirm' | 'done';
+type Step = 'service' | 'professional' | 'datetime' | 'confirm' | 'done';
 
 /** Data e hora atual no fuso de Brasília. */
 function nowBrasilia(): { date: string; time: string } {
@@ -48,6 +48,7 @@ function findSimilarPair(selected: Service[]): [Service, Service] | null {
 
 export default function BookingFlow() {
   const { data, products: upsellProducts, addAppointment, getSlug } = usePublicTenant();
+  const { client } = usePublicClient();
   const { services, professionals, tenant } = data;
 
   const navigate = useNavigate();
@@ -64,7 +65,6 @@ export default function BookingFlow() {
   const [selProf, setSelProf] = useState<Professional | null>(null);
   const [selDate, setSelDate] = useState<Date | null>(null);
   const [selSlot, setSelSlot] = useState<string | null>(null);
-  const [info, setInfo] = useState({ name: '', email: '', phone: '' });
   const [dateOffset, setDateOffset] = useState(0);
   const [doneAppts, setDoneAppts] = useState<Appointment[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -131,7 +131,7 @@ export default function BookingFlow() {
 
   // ─── Confirmar agendamento ────────────────────────────────────────────────
   const handleConfirm = async () => {
-    if (selSvcs.length === 0 || !selProf || !selDate || !selSlot) return;
+    if (selSvcs.length === 0 || !selProf || !selDate || !selSlot || !client) return;
     setSubmitting(true);
     setBookingError('');
     try {
@@ -140,9 +140,9 @@ export default function BookingFlow() {
         serviceIds: selSvcs.map(s => s.id),
         date: format(selDate, 'yyyy-MM-dd'),
         startTime: selSlot.slice(0, 5),
-        clientName: info.name,
-        clientEmail: info.email,
-        clientPhone: info.phone || undefined,
+        clientName: client.name,
+        clientEmail: client.email,
+        clientPhone: client.phone,
       });
       setDoneAppts(appts);
       setStep('done');
@@ -159,23 +159,24 @@ export default function BookingFlow() {
     setSelProf(null);
     setSelDate(null);
     setSelSlot(null);
-    setInfo({ name: '', email: '', phone: '' });
     setDateOffset(0);
     setDoneAppts([]);
     navigate(`/${tenant.slug}`);
   };
 
   const btnStyle = { backgroundColor: tenant.primaryColor };
-  const stepOrder: Step[] = ['service', 'professional', 'datetime', 'info', 'confirm', 'done'];
+  const stepOrder: Step[] = ['service', 'professional', 'datetime', 'confirm', 'done'];
   const stepIdx = stepOrder.indexOf(step);
   const stepLabels: Record<Step, string> = {
-    service: 'Serviços',
+    service:      'Serviços',
     professional: 'Profissional',
-    datetime: 'Data & Hora',
-    info: 'Seus Dados',
-    confirm: 'Confirmação',
-    done: 'Concluído',
+    datetime:     'Data & Hora',
+    confirm:      'Confirmação',
+    done:         'Concluído',
   };
+
+  // Gate: cliente não autenticado não pode agendar
+  if (!client) return <BookingAuthGate />;
 
   if (!tenant.isOpen) {
     return (
@@ -487,62 +488,19 @@ export default function BookingFlow() {
             </div>
           )}
 
-          <Button className="w-full" style={btnStyle} disabled={!selDate || !selSlot} onClick={() => setStep('info')}>
+          <Button className="w-full" style={btnStyle} disabled={!selDate || !selSlot} onClick={() => setStep('confirm')}>
             Continuar
           </Button>
         </div>
       )}
 
       {/* ══════════════════════════════════════════════════════════════════════
-          STEP 4 — Dados do cliente
-      ══════════════════════════════════════════════════════════════════════ */}
-      {step === 'info' && (
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={() => setStep('datetime')}>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <h3 className="text-xl font-semibold">Seus Dados</h3>
-          </div>
-          <div className="space-y-3">
-            <div className="space-y-1">
-              <Label>Nome completo *</Label>
-              <Input placeholder="João Silva" value={info.name} onChange={e => setInfo(i => ({ ...i, name: e.target.value }))} />
-            </div>
-            <div className="space-y-1">
-              <Label>E-mail *</Label>
-              <Input type="email" placeholder="joao@email.com" value={info.email} onChange={e => setInfo(i => ({ ...i, email: e.target.value }))} />
-            </div>
-            <div className="space-y-1">
-              <Label>Telefone *</Label>
-              <Input
-                placeholder="(00) 00000-0000"
-                value={info.phone}
-                onChange={e => {
-                  const digits = e.target.value.replace(/\D/g, '').slice(0, 11);
-                  let masked = '';
-                  if (digits.length === 0) masked = '';
-                  else if (digits.length <= 2) masked = `(${digits}`;
-                  else if (digits.length <= 7) masked = `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
-                  else masked = `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
-                  setInfo(i => ({ ...i, phone: masked }));
-                }}
-              />
-            </div>
-          </div>
-          <Button className="w-full" style={btnStyle} disabled={!info.name || !info.email || !info.phone} onClick={() => setStep('confirm')}>
-            Revisar
-          </Button>
-        </div>
-      )}
-
-      {/* ══════════════════════════════════════════════════════════════════════
-          STEP 5 — Confirmação
+          STEP 4 — Confirmação
       ══════════════════════════════════════════════════════════════════════ */}
       {step === 'confirm' && selSvcs.length > 0 && selProf && selDate && selSlot && (
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={() => setStep('info')}>
+            <Button variant="ghost" size="icon" onClick={() => setStep('datetime')}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <h3 className="text-xl font-semibold">Confirmar Agendamento</h3>
@@ -583,7 +541,7 @@ export default function BookingFlow() {
                   ['Data', format(selDate, "EEEE, d 'de' MMMM", { locale: ptBR })],
                   ['Início', selSlot],
                   ['Duração', `${totalDuration} min`],
-                  ['Cliente', info.name],
+                  ['Cliente', client!.name],
                 ].map(([l, v]) => (
                   <div key={l} className="flex justify-between">
                     <span className="text-muted-foreground">{l}</span>

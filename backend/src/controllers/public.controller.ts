@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
+import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { prisma } from '../config/database';
+import { env } from '../config/env';
 import { AppError } from '../types';
 import { generateTimeSlots } from '../services/schedule.service';
 
@@ -373,6 +375,208 @@ export async function createPublicBooking(req: Request, res: Response, next: Nex
     });
 
     res.status(201).json({ success: true, data: appointments });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ─── Login público de cliente (e-mail + senha) ───────────────────────────────
+const clientLoginSchema = z.object({
+  email:    z.string().email('E-mail inválido'),
+  password: z.string().min(1, 'Senha obrigatória'),
+});
+
+export async function loginPublicClient(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { slug } = req.params;
+    const { email, password } = clientLoginSchema.parse(req.body);
+
+    const tenant = await prisma.tenant.findUnique({
+      where: { slug },
+      select: { id: true, status: true },
+    });
+
+    if (!tenant || tenant.status === 'suspended') {
+      return next(new AppError('Estabelecimento não encontrado', 404));
+    }
+
+    const client = await prisma.client.findUnique({
+      where: { tenantId_email: { tenantId: tenant.id, email } },
+      select: { id: true, name: true, email: true, phone: true, passwordHash: true },
+    });
+
+    if (!client) {
+      return next(new AppError('E-mail ou senha inválidos.', 401, 'INVALID_CREDENTIALS'));
+    }
+
+    if (!client.passwordHash) {
+      return next(new AppError('Esta conta usa login com Google. Clique em "Continuar com Google".', 401, 'USE_GOOGLE'));
+    }
+
+    const match = await bcrypt.compare(password, client.passwordHash);
+    if (!match) {
+      return next(new AppError('E-mail ou senha inválidos.', 401, 'INVALID_CREDENTIALS'));
+    }
+
+    res.json({ success: true, data: { id: client.id, name: client.name, email: client.email, phone: client.phone } });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ─── Cadastro público de cliente (e-mail + senha) ────────────────────────────
+const clientRegisterSchema = z.object({
+  name:     z.string().min(2, 'Nome muito curto').max(100),
+  email:    z.string().email('E-mail inválido'),
+  phone:    z.string().optional(),
+  password: z.string().min(6, 'Senha deve ter ao menos 6 caracteres'),
+});
+
+export async function registerPublicClient(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { slug } = req.params;
+    const data = clientRegisterSchema.parse(req.body);
+
+    const tenant = await prisma.tenant.findUnique({
+      where: { slug },
+      select: { id: true, status: true },
+    });
+
+    if (!tenant || tenant.status === 'suspended') {
+      return next(new AppError('Estabelecimento não encontrado', 404));
+    }
+
+    const passwordHash = await bcrypt.hash(data.password, env.BCRYPT_ROUNDS);
+
+    const existing = await prisma.client.findUnique({
+      where: { tenantId_email: { tenantId: tenant.id, email: data.email } },
+      select: { id: true },
+    });
+
+    if (existing) {
+      return next(new AppError('Este e-mail já está cadastrado. Faça login.', 409, 'EMAIL_IN_USE'));
+    }
+
+    const client = await prisma.client.create({
+      data: { tenantId: tenant.id, name: data.name, email: data.email, phone: data.phone, passwordHash },
+      select: { id: true, name: true, email: true, phone: true },
+    });
+
+    res.status(201).json({ success: true, data: client });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ─── Auth pública via Google ──────────────────────────────────────────────────
+const googleAuthSchema = z.object({
+  accessToken: z.string().min(1),
+});
+
+export async function googleAuthPublicClient(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { slug } = req.params;
+    const { accessToken } = googleAuthSchema.parse(req.body);
+
+    // Valida o token junto ao Google e obtém os dados do usuário
+    const googleRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    if (!googleRes.ok) {
+      return next(new AppError('Token do Google inválido ou expirado.', 401, 'GOOGLE_AUTH_FAILED'));
+    }
+
+    const profile = await googleRes.json() as { email?: string; name?: string };
+
+    if (!profile.email) {
+      return next(new AppError('Não foi possível obter o e-mail da conta Google.', 400));
+    }
+
+    const tenant = await prisma.tenant.findUnique({
+      where: { slug },
+      select: { id: true, status: true },
+    });
+
+    if (!tenant || tenant.status === 'suspended') {
+      return next(new AppError('Estabelecimento não encontrado', 404));
+    }
+
+    // Upsert: cria o cliente ou retorna o existente (sem sobrescrever a senha)
+    const client = await prisma.client.upsert({
+      where: { tenantId_email: { tenantId: tenant.id, email: profile.email } },
+      update: { name: profile.name ?? undefined },
+      create: { tenantId: tenant.id, name: profile.name ?? profile.email, email: profile.email },
+      select: { id: true, name: true, email: true, phone: true },
+    });
+
+    res.json({ success: true, data: client });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ─── Cadastro público de profissional ────────────────────────────────────────
+const professionalRegisterSchema = z.object({
+  name:               z.string().min(2, 'Nome muito curto').max(100),
+  email:              z.string().email('E-mail inválido'),
+  password:           z.string().min(6, 'Senha deve ter ao menos 6 caracteres'),
+  specialty:          z.string().min(2, 'Especialidade obrigatória').max(100),
+  bio:                z.string().max(500).optional(),
+  workingHoursStart:  z.string().regex(/^\d{2}:\d{2}$/).default('08:00'),
+  workingHoursEnd:    z.string().regex(/^\d{2}:\d{2}$/).default('18:00'),
+  workingDays:        z.array(z.number().int().min(0).max(6)).default([1, 2, 3, 4, 5]),
+});
+
+export async function registerPublicProfessional(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { slug } = req.params;
+    const data = professionalRegisterSchema.parse(req.body);
+
+    const tenant = await prisma.tenant.findUnique({
+      where: { slug },
+      select: { id: true, status: true },
+    });
+
+    if (!tenant || tenant.status === 'suspended') {
+      return next(new AppError('Estabelecimento não encontrado', 404));
+    }
+
+    const existingUser = await prisma.user.findUnique({ where: { email: data.email } });
+    if (existingUser) {
+      return next(new AppError('Este e-mail já está em uso', 409, 'EMAIL_IN_USE'));
+    }
+
+    const passwordHash = await bcrypt.hash(data.password, env.BCRYPT_ROUNDS);
+
+    const result = await prisma.$transaction(async (tx) => {
+      const professional = await tx.professional.create({
+        data: {
+          tenantId:          tenant.id,
+          name:              data.name,
+          specialty:         data.specialty,
+          bio:               data.bio,
+          workingHoursStart: data.workingHoursStart,
+          workingHoursEnd:   data.workingHoursEnd,
+          workingDays:       data.workingDays,
+        },
+      });
+
+      const user = await tx.user.create({
+        data: {
+          name:           data.name,
+          email:          data.email,
+          passwordHash,
+          role:           'professional',
+          tenantId:       tenant.id,
+          professionalId: professional.id,
+        },
+      });
+
+      return { name: professional.name, email: user.email };
+    });
+
+    res.status(201).json({ success: true, data: result });
   } catch (err) {
     next(err);
   }
