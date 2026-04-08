@@ -146,6 +146,76 @@ export async function deleteTenant(req: Request, res: Response, next: NextFuncti
   }
 }
 
+// ─── Listar usuários (admins + profissionais) ─────────────────────────────────
+export async function listUsers(_req: Request, res: Response, next: NextFunction) {
+  try {
+    const users = await prisma.user.findMany({
+      where: { role: { in: ['tenant_admin', 'professional'] } },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        tenantId: true,
+        tenant: { select: { name: true, slug: true } },
+      },
+      orderBy: [{ role: 'asc' }, { name: 'asc' }],
+    });
+    res.json({ success: true, data: users });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ─── Atualizar e-mail de qualquer usuário ─────────────────────────────────────
+const updateUserEmailSchema = z.object({
+  email: z.string().email('E-mail inválido'),
+});
+
+export async function updateUserEmail(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { id } = req.params;
+    const { email } = updateUserEmailSchema.parse(req.body);
+
+    const existing = await prisma.user.findUnique({ where: { email } });
+    if (existing && existing.id !== id) {
+      return next(new AppError('E-mail já está em uso', 400, 'EMAIL_IN_USE'));
+    }
+
+    const updated = await prisma.user.update({
+      where: { id },
+      data: { email },
+      select: { id: true, name: true, email: true, role: true, tenantId: true },
+    });
+
+    res.json({ success: true, data: updated });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ─── Forçar nova senha de qualquer usuário ────────────────────────────────────
+const forcePasswordSchema = z.object({
+  newPassword: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres'),
+});
+
+export async function forceChangePassword(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { id } = req.params;
+    const { newPassword } = forcePasswordSchema.parse(req.body);
+
+    const user = await prisma.user.findUnique({ where: { id } });
+    if (!user) return next(new AppError('Usuário não encontrado', 404));
+
+    const passwordHash = await bcrypt.hash(newPassword, env.BCRYPT_ROUNDS);
+    await prisma.user.update({ where: { id }, data: { passwordHash } });
+
+    res.json({ success: true, data: { message: 'Senha alterada com sucesso' } });
+  } catch (err) {
+    next(err);
+  }
+}
+
 // ─── Métricas da plataforma ───────────────────────────────────────────────────
 export async function getPlatformMetrics(_req: Request, res: Response, next: NextFunction) {
   try {

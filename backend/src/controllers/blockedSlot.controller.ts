@@ -6,8 +6,8 @@ import { AppError, AuthRequest } from '../types';
 const blockedSlotSchema = z.object({
   professionalId: z.string().uuid(),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato: YYYY-MM-DD'),
-  startTime: z.string().regex(/^\d{2}:\d{2}$/, 'Formato: HH:mm'),
-  endTime: z.string().regex(/^\d{2}:\d{2}$/, 'Formato: HH:mm'),
+  startTime: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/, 'Formato: HH:mm').transform(t => t.slice(0, 5)),
+  endTime: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/, 'Formato: HH:mm').transform(t => t.slice(0, 5)),
   reason: z.string().max(200).optional(),
 });
 

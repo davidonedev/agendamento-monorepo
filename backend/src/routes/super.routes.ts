@@ -6,6 +6,9 @@ import {
   updateTenant,
   deleteTenant,
   getPlatformMetrics,
+  listUsers,
+  updateUserEmail,
+  forceChangePassword,
 } from '../controllers/super.controller';
 import { authenticate, authorize } from '../middleware/auth.middleware';
 
@@ -31,5 +34,14 @@ router.patch('/tenants/:id', updateTenant);
 
 // DELETE /api/super/tenants/:id
 router.delete('/tenants/:id', deleteTenant);
+
+// GET /api/super/users
+router.get('/users', listUsers);
+
+// PATCH /api/super/users/:id/email
+router.patch('/users/:id/email', updateUserEmail);
+
+// PUT /api/super/users/:id/password
+router.put('/users/:id/password', forceChangePassword);
 
 export { router as superRoutes };
