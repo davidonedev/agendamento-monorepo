@@ -16,6 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useTenant } from '@/context/TenantContext';
 import { formatCurrency } from '@/lib/utils';
+import { AppointmentCardList, type ApptCardData } from '@/components/ui/AppointmentCards';
 import type { Appointment, AppointmentStatus } from '@/types';
 
 // ─── Status config ────────────────────────────────────────────────────────────
@@ -97,11 +98,23 @@ function isSlotConflict(
 }
 
 interface ApptForm {
-  clientId: string; professionalId: string; serviceId: string;
+  // cliente existente
+  clientId: string;
+  clientSearch: string;
+  // novo cliente
+  newClientMode: boolean;
+  newName: string;
+  newEmail: string;
+  newPhone: string;
+  // agendamento
+  professionalId: string; serviceId: string;
   date: string; startTime: string; notes: string; status: AppointmentStatus;
 }
 const emptyForm = (): ApptForm => ({
-  clientId: '', professionalId: '', serviceId: '',
+  clientId: '', clientSearch: '',
+  newClientMode: false,
+  newName: '', newEmail: '', newPhone: '',
+  professionalId: '', serviceId: '',
   date: format(new Date(), 'yyyy-MM-dd'), startTime: '09:00',
   notes: '', status: 'confirmed',
 });
@@ -305,8 +318,17 @@ export default function AgendaView() {
 
   const handleApptSave = async () => {
     setApptError('');
-    if (!apptForm.clientId || !apptForm.professionalId || !apptForm.serviceId || !apptForm.date || !apptForm.startTime) {
+    if (!apptForm.professionalId || !apptForm.serviceId || !apptForm.date || !apptForm.startTime) {
       setApptError('Preencha todos os campos obrigatórios.'); return;
+    }
+    if (apptForm.newClientMode) {
+      if (!apptForm.newName.trim() || !apptForm.newEmail.trim() || !apptForm.newPhone.trim()) {
+        setApptError('Preencha nome, e-mail e telefone do novo cliente.'); return;
+      }
+    } else {
+      if (!apptForm.clientId) {
+        setApptError('Selecione um cliente.'); return;
+      }
     }
     if (isPastInBrasilia(apptForm.date, apptForm.startTime)) {
       setApptError('Não é possível agendar em um horário que já passou.'); return;
@@ -317,13 +339,41 @@ export default function AgendaView() {
       setApptError('Conflito de horário: o profissional já tem um compromisso neste intervalo.'); return;
     }
     try {
-      await addAppointment({
-        clientId: apptForm.clientId, professionalId: apptForm.professionalId,
-        serviceId: apptForm.serviceId, date: apptForm.date,
-        startTime: apptForm.startTime, notes: apptForm.notes || undefined,
-      });
+      // Garante formato HH:mm independente do browser (alguns retornam HH:mm:ss)
+      const startTime = apptForm.startTime.slice(0, 5);
+
+      const base = {
+        professionalId: apptForm.professionalId,
+        serviceId:      apptForm.serviceId,
+        date:           apptForm.date,
+        startTime,
+        notes:          apptForm.notes.trim() || undefined,
+      };
+
+      const payload = apptForm.newClientMode
+        ? {
+            ...base,
+            clientName:  apptForm.newName.trim(),
+            clientEmail: apptForm.newEmail.trim(),
+            clientPhone: apptForm.newPhone.trim() || undefined,
+          }
+        : {
+            ...base,
+            clientId: apptForm.clientId,
+          };
+
+      await addAppointment(payload);
       setApptDialog(false); setApptForm(emptyForm());
-    } catch (err) { setApptError(err instanceof Error ? err.message : 'Erro ao criar agendamento.'); }
+    } catch (err) {
+      if (err && typeof err === 'object' && 'details' in err) {
+        const details = (err as { details?: { field: string; message: string }[] }).details;
+        if (details?.length) {
+          setApptError(details.map(d => `${d.field}: ${d.message}`).join(' | '));
+          return;
+        }
+      }
+      setApptError(err instanceof Error ? err.message : 'Erro ao criar agendamento.');
+    }
   };
 
   const openApptDialog = (date?: string, profId?: string) => {
@@ -488,8 +538,8 @@ export default function AgendaView() {
             </SelectContent>
           </Select>
 
-          {/* Tabela */}
-          <Card>
+          {/* Tabela — visível apenas em telas médias+ */}
+          <Card className="hidden md:block">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
@@ -520,6 +570,32 @@ export default function AgendaView() {
               </table>
             </div>
           </Card>
+
+          {/* Cards — visível apenas em mobile */}
+          <div className="md:hidden">
+            <AppointmentCardList
+              appointments={tableRows.map((a): ApptCardData => {
+                const client = clients.find(c => c.id === a.clientId);
+                const prof   = professionals.find(p => p.id === a.professionalId);
+                const svc    = services.find(s => s.id === a.serviceId);
+                return {
+                  id: a.id,
+                  date: a.date,
+                  startTime: a.startTime,
+                  endTime: a.endTime,
+                  status: a.status,
+                  price: a.price,
+                  notes: a.notes,
+                  clientName: client?.name,
+                  clientPhone: client?.phone,
+                  serviceName: svc?.name,
+                  serviceDuration: svc?.duration,
+                  professionalName: prof?.name,
+                };
+              })}
+              onSave={handleTableSave}
+            />
+          </div>
         </div>
       )}
 
@@ -638,14 +714,16 @@ export default function AgendaView() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={apptDialog} onOpenChange={o => { setApptDialog(o); if (!o) setApptError(''); }}>
-        <DialogContent className="max-w-lg">
+      <Dialog open={apptDialog} onOpenChange={o => { setApptDialog(o); if (!o) { setApptError(''); setApptForm(emptyForm()); } }}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <CalendarPlus className="h-5 w-5 text-primary" /> Novo Agendamento Manual
+              <CalendarPlus className="h-5 w-5 text-primary" /> Novo Agendamento
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
+
+            {/* Serviço */}
             <div className="space-y-1">
               <Label>Serviço *</Label>
               <Select value={apptForm.serviceId} onValueChange={v => setApptForm(f => ({ ...f, serviceId: v, professionalId: '' }))}>
@@ -655,6 +733,8 @@ export default function AgendaView() {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Profissional */}
             <div className="space-y-1">
               <Label>Profissional *</Label>
               <Select value={apptForm.professionalId} onValueChange={v => setApptForm(f => ({ ...f, professionalId: v }))} disabled={!apptForm.serviceId}>
@@ -664,15 +744,106 @@ export default function AgendaView() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1">
-              <Label>Cliente *</Label>
-              <Select value={apptForm.clientId} onValueChange={v => setApptForm(f => ({ ...f, clientId: v }))}>
-                <SelectTrigger><SelectValue placeholder="Selecione o cliente…" /></SelectTrigger>
-                <SelectContent>
-                  {clients.map(c => <SelectItem key={c.id} value={c.id}>{c.name} — {c.phone}</SelectItem>)}
-                </SelectContent>
-              </Select>
+
+            {/* Cliente — busca ou novo */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label>Cliente *</Label>
+                <button
+                  type="button"
+                  className="text-xs text-primary underline underline-offset-2"
+                  onClick={() => setApptForm(f => ({
+                    ...f,
+                    newClientMode: !f.newClientMode,
+                    clientId: '', clientSearch: '',
+                    newName: '', newEmail: '', newPhone: '',
+                  }))}
+                >
+                  {apptForm.newClientMode ? '← Buscar cliente existente' : '+ Novo cliente'}
+                </button>
+              </div>
+
+              {!apptForm.newClientMode ? (
+                /* ── Busca de cliente existente ── */
+                <div className="space-y-1">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      className="pl-9"
+                      placeholder="Digite o nome do cliente…"
+                      value={apptForm.clientSearch}
+                      onChange={e => setApptForm(f => ({ ...f, clientSearch: e.target.value, clientId: '' }))}
+                    />
+                  </div>
+                  {apptForm.clientSearch.trim().length > 0 && (
+                    <div className="border rounded-md max-h-44 overflow-y-auto bg-popover shadow-md">
+                      {clients
+                        .filter(c => c.name.toLowerCase().startsWith(apptForm.clientSearch.toLowerCase()))
+                        .slice(0, 20)
+                        .map(c => (
+                          <button
+                            key={c.id}
+                            type="button"
+                            className={`w-full text-left px-3 py-2.5 text-sm hover:bg-muted transition-colors border-b last:border-0 ${apptForm.clientId === c.id ? 'bg-primary/10 font-semibold' : ''}`}
+                            onClick={() => setApptForm(f => ({ ...f, clientId: c.id, clientSearch: c.name }))}
+                          >
+                            <span className="font-medium">{c.name}</span>
+                            <span className="text-muted-foreground text-xs ml-2">{c.phone}</span>
+                          </button>
+                        ))}
+                      {clients.filter(c => c.name.toLowerCase().startsWith(apptForm.clientSearch.toLowerCase())).length === 0 && (
+                        <p className="px-3 py-2 text-sm text-muted-foreground">Nenhum cliente encontrado.</p>
+                      )}
+                    </div>
+                  )}
+                  {apptForm.clientId && (
+                    <p className="text-xs text-green-600 font-medium">
+                      ✓ {clients.find(c => c.id === apptForm.clientId)?.name} selecionado
+                    </p>
+                  )}
+                </div>
+              ) : (
+                /* ── Novo cliente ── */
+                <div className="space-y-3 p-3 rounded-lg border bg-muted/30">
+                  <p className="text-xs text-muted-foreground">Preencha os dados do novo cliente:</p>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Nome completo *</Label>
+                    <Input
+                      placeholder="João Silva"
+                      value={apptForm.newName}
+                      onChange={e => setApptForm(f => ({ ...f, newName: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">E-mail *</Label>
+                    <Input
+                      type="email"
+                      placeholder="joao@email.com"
+                      value={apptForm.newEmail}
+                      onChange={e => setApptForm(f => ({ ...f, newEmail: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Telefone *</Label>
+                    <Input
+                      placeholder="(00) 00000-0000"
+                      value={apptForm.newPhone}
+                      onChange={e => {
+                        const digits = e.target.value.replace(/\D/g, '').slice(0, 11);
+                        let masked = '';
+                        if (digits.length === 0) masked = '';
+                        else if (digits.length <= 2) masked = `(${digits}`;
+                        else if (digits.length <= 7) masked = `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+                        else masked = `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+                        setApptForm(f => ({ ...f, newPhone: masked }));
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
+
+            {/* Data e Horário */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label>Data *</Label>
@@ -687,11 +858,15 @@ export default function AgendaView() {
                   onChange={e => setApptForm(f => ({ ...f, startTime: e.target.value }))} />
               </div>
             </div>
+
+            {/* Resumo do serviço */}
             {selectedService && (
               <p className="text-xs text-muted-foreground bg-muted/50 rounded p-2">
                 Duração: <strong>{selectedService.duration} min</strong> · Término: <strong>{addMinutes(apptForm.startTime, selectedService.duration)}</strong> · Valor: <strong>{formatCurrency(selectedService.price)}</strong>
               </p>
             )}
+
+            {/* Status */}
             <div className="space-y-1">
               <Label>Status</Label>
               <Select value={apptForm.status} onValueChange={v => setApptForm(f => ({ ...f, status: v as AppointmentStatus }))}>
@@ -702,19 +877,36 @@ export default function AgendaView() {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Observações */}
             <div className="space-y-1">
               <Label>Observações</Label>
               <Textarea placeholder="Alguma observação…" value={apptForm.notes} onChange={e => setApptForm(f => ({ ...f, notes: e.target.value }))} className="resize-none h-20" />
             </div>
+
             {apptError && (
               <div className="flex items-center gap-2 text-destructive text-sm bg-destructive/10 rounded-md px-3 py-2">
                 <X className="h-4 w-4 shrink-0" /> {apptError}
               </div>
             )}
           </div>
+
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setApptDialog(false); setApptError(''); }}>Cancelar</Button>
-            <Button onClick={handleApptSave}>Criar Agendamento</Button>
+            <Button variant="outline" onClick={() => { setApptDialog(false); setApptError(''); setApptForm(emptyForm()); }}>Cancelar</Button>
+            <Button
+              onClick={handleApptSave}
+              disabled={
+                !apptForm.serviceId ||
+                !apptForm.professionalId ||
+                !apptForm.date ||
+                !apptForm.startTime ||
+                (apptForm.newClientMode
+                  ? !apptForm.newName.trim() || !apptForm.newEmail.trim() || !apptForm.newPhone.trim()
+                  : !apptForm.clientId)
+              }
+            >
+              Criar Agendamento
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
