@@ -33,21 +33,12 @@ import ProfServicesView      from './components/professional/ProfServicesView';
 import ServicesView          from './components/admin/ServicesView';
 import ProductsView          from './components/admin/ProductsView';
 import RemindersView         from './components/admin/RemindersView';
-<<<<<<< Updated upstream
-import ServicesPage          from './components/client/ServicesPage';
-import BookingFlow           from './components/client/BookingFlow';
-<<<<<<< HEAD
-import RegisterPage          from './pages/RegisterPage';
-=======
-=======
 import ServicesPage                from './components/client/ServicesPage';
 import BookingFlow                from './components/client/BookingFlow';
 import MyAppointments             from './components/client/MyAppointments';
 import RegisterPage               from './pages/RegisterPage';
 import ProfessionalRegisterPage   from './pages/ProfessionalRegisterPage';
 import VerifyEmailPage            from './pages/VerifyEmailPage';
->>>>>>> Stashed changes
->>>>>>> dev
 
 // ─── Route guards ─────────────────────────────────────────────────────────────
 function SuperGuard({ children }: { children: React.ReactNode }) {
@@ -122,17 +113,6 @@ function AppRoutes() {
       </Route>
 
       {/* Public client portal — /:tenantSlug */}
-<<<<<<< HEAD
-      <Route path=":tenantSlug" element={<PublicTenantProvider><PublicClientProvider><ClientLayout /></PublicClientProvider></PublicTenantProvider>}>
-        <Route index            element={<ServicesPage />} />
-        <Route path="booking"   element={<BookingFlow />} />
-        <Route path="register"  element={<RegisterPage />} />
-=======
-<<<<<<< Updated upstream
-      <Route path=":tenantSlug" element={<PublicTenantProvider><ClientLayout /></PublicTenantProvider>}>
-        <Route index          element={<ServicesPage />} />
-        <Route path="booking" element={<BookingFlow />} />
-=======
       <Route path=":tenantSlug" element={<PublicTenantProvider><PublicClientProvider><ClientLayout /></PublicClientProvider></PublicTenantProvider>}>
         <Route index                           element={<ServicesPage />} />
         <Route path="booking"                  element={<BookingFlow />} />
@@ -140,8 +120,6 @@ function AppRoutes() {
         <Route path="professional-register"    element={<ProfessionalRegisterPage />} />
         <Route path="my-appointments"          element={<MyAppointments />} />
         <Route path="verify-email"             element={<VerifyEmailPage />} />
->>>>>>> Stashed changes
->>>>>>> dev
       </Route>
 
       {/* Fallback */}
