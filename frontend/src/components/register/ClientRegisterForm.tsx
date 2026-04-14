@@ -1,17 +1,19 @@
 import { useState } from 'react';
-import { ArrowLeft, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff, Loader2, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { usePublicTenant } from '@/context/PublicTenantContext';
 import { usePublicClient } from '@/context/PublicClientContext';
 import { registerClientApi, type ClientSessionData } from '@/services/register.service';
+import { ApiError } from '@/lib/api';
 import { maskPhone } from '@/lib/phone';
 import GoogleSignInButton from './GoogleSignInButton';
 
 interface ClientRegisterFormProps {
   onBack: () => void;
   onSuccess: (result: ClientSessionData) => void;
+  onSwitchToLogin?: () => void;
 }
 
 interface FormState {
@@ -58,7 +60,7 @@ function Divider() {
 
 // ─── Componente ───────────────────────────────────────────────────────────────
 
-export default function ClientRegisterForm({ onBack, onSuccess }: ClientRegisterFormProps) {
+export default function ClientRegisterForm({ onBack, onSuccess, onSwitchToLogin }: ClientRegisterFormProps) {
   const { data: { tenant }, getSlug } = usePublicTenant();
   const { login } = usePublicClient();
 
@@ -66,6 +68,7 @@ export default function ClientRegisterForm({ onBack, onSuccess }: ClientRegister
   const [errors, setErrors] = useState<FormErrors>({});
   const [saving, setSaving] = useState(false);
   const [apiError, setApiError] = useState('');
+  const [accountExistsMsg, setAccountExistsMsg] = useState('');
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -81,6 +84,7 @@ export default function ClientRegisterForm({ onBack, onSuccess }: ClientRegister
 
     setSaving(true);
     setApiError('');
+    setAccountExistsMsg('');
     try {
       const result = await registerClientApi(getSlug(), {
         name:     form.name.trim(),
@@ -90,7 +94,15 @@ export default function ClientRegisterForm({ onBack, onSuccess }: ClientRegister
       });
       onSuccess(result);
     } catch (err: unknown) {
-      setApiError(err instanceof Error ? err.message : 'Erro ao cadastrar.');
+      const code = err instanceof ApiError ? err.code : undefined;
+      if (code === 'EMAIL_IN_USE' || code === 'PHONE_IN_USE') {
+        const field = code === 'EMAIL_IN_USE' ? 'e-mail' : 'telefone';
+        setAccountExistsMsg(
+          `Este ${field} já possui uma conta neste estabelecimento. Faça login para acessar.`,
+        );
+      } else {
+        setApiError(err instanceof Error ? err.message : 'Erro ao cadastrar.');
+      }
     } finally {
       setSaving(false);
     }
@@ -204,15 +216,35 @@ export default function ClientRegisterForm({ onBack, onSuccess }: ClientRegister
           <p className="text-sm text-destructive bg-destructive/10 rounded-lg px-3 py-2">{apiError}</p>
         )}
 
-        <Button
-          type="submit"
-          className="w-full"
-          disabled={saving}
-          style={{ backgroundColor: tenant.primaryColor, borderColor: tenant.primaryColor }}
-        >
-          {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-          Criar conta
-        </Button>
+        {/* Banner de conta já existente */}
+        {accountExistsMsg && (
+          <div className="rounded-lg border border-yellow-300 bg-yellow-50 dark:bg-yellow-900/20 dark:border-yellow-700 p-4 space-y-3">
+            <p className="text-sm text-yellow-800 dark:text-yellow-300">{accountExistsMsg}</p>
+            {onSwitchToLogin && (
+              <Button
+                type="button"
+                className="w-full gap-2"
+                style={{ backgroundColor: tenant.primaryColor, borderColor: tenant.primaryColor }}
+                onClick={onSwitchToLogin}
+              >
+                <LogIn className="h-4 w-4" />
+                Fazer login
+              </Button>
+            )}
+          </div>
+        )}
+
+        {!accountExistsMsg && (
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={saving}
+            style={{ backgroundColor: tenant.primaryColor, borderColor: tenant.primaryColor }}
+          >
+            {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+            Criar conta
+          </Button>
+        )}
       </form>
     </div>
   );

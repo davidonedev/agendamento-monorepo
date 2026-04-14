@@ -63,8 +63,6 @@ export async function registerProfessionalApi(
 ): Promise<{ name: string; email: string }> {
   return api.post(`/public/${slug}/register/professional`, payload);
 }
-<<<<<<< HEAD
-=======
 
 // ─── Registro público de negócio (cria tenant + tenant_admin) ─────────────────
 
@@ -83,4 +81,3 @@ export async function registerBusinessApi(
 ): Promise<{ message: string; slug: string }> {
   return api.post('/public/register/business', payload);
 }
->>>>>>> dev

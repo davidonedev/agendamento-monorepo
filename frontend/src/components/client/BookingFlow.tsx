@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { format, addDays, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   AlertTriangle, ChevronLeft, ChevronRight, CheckCircle, Loader2, X,
-  ShoppingBag, Mail, Eye, EyeOff,
+  ShoppingBag, Mail, Eye, EyeOff, LogIn,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,23 +15,13 @@ import { Badge } from '@/components/ui/badge';
 import { usePublicTenant } from '@/context/PublicTenantContext';
 import { usePublicClient } from '@/context/PublicClientContext';
 import { formatCurrency } from '@/lib/utils';
-<<<<<<< Updated upstream
-import { getAvailableSlotsApi } from '@/services/public.service';
-import BookingAuthGate from './BookingAuthGate';
-import type { Appointment, Service, Professional } from '@/types';
-
-<<<<<<< HEAD
-type Step = 'service' | 'professional' | 'datetime' | 'confirm' | 'done';
-=======
-type Step = 'service' | 'professional' | 'datetime' | 'info' | 'confirm' | 'done';
-=======
+import { ApiError } from '@/lib/api';
 import { maskPhone } from '@/lib/phone';
 import { getAvailableSlotsApi, createPublicBookingApi, registerAndBookApi, resendVerificationEmailApi } from '@/services/public.service';
+import ClientLoginDialog from '@/components/register/ClientLoginDialog';
 import type { Appointment, Service, Professional } from '@/types';
 
 type Step = 'service' | 'professional' | 'datetime' | 'client-data' | 'email-pending' | 'confirm' | 'done';
->>>>>>> Stashed changes
->>>>>>> dev
 
 /** Data e hora atual no fuso de Brasília. */
 function nowBrasilia(): { date: string; time: string } {
@@ -74,16 +64,8 @@ function validateClientForm(f: ClientForm) {
 }
 
 export default function BookingFlow() {
-<<<<<<< Updated upstream
-  const { data, products: upsellProducts, addAppointment, getSlug } = usePublicTenant();
-<<<<<<< HEAD
-  const { client } = usePublicClient();
-=======
-=======
   const { data, products: upsellProducts, getSlug } = usePublicTenant();
   const { client } = usePublicClient();
->>>>>>> Stashed changes
->>>>>>> dev
   const { services, professionals, tenant } = data;
 
   const navigate = useNavigate();
@@ -96,20 +78,10 @@ export default function BookingFlow() {
   const [selSvcs, setSelSvcs] = useState<Service[]>(
     preService ? (services.find(s => s.id === preService) ? [services.find(s => s.id === preService)!] : []) : [],
   );
-<<<<<<< Updated upstream
 
-  const [selProf, setSelProf] = useState<Professional | null>(null);
-  const [selDate, setSelDate] = useState<Date | null>(null);
-  const [selSlot, setSelSlot] = useState<string | null>(null);
-<<<<<<< HEAD
-=======
-  const [info, setInfo] = useState({ name: '', email: '', phone: '' });
-=======
   const [selProf,  setSelProf]  = useState<Professional | null>(null);
   const [selDate,  setSelDate]  = useState<Date | null>(null);
   const [selSlot,  setSelSlot]  = useState<string | null>(null);
->>>>>>> Stashed changes
->>>>>>> dev
   const [dateOffset, setDateOffset] = useState(0);
   const [doneAppts, setDoneAppts]   = useState<Appointment[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -127,6 +99,20 @@ export default function BookingFlow() {
   const [pendingEmail, setPendingEmail] = useState(''); // e-mail usado no reenvio
   const [resendLoading, setResendLoading] = useState(false);
   const [resendMsg,     setResendMsg]     = useState('');
+
+  // Dialog de login e estado de conta já existente
+  const [showLoginDialog, setShowLoginDialog] = useState(false);
+  const [accountExistsMsg, setAccountExistsMsg] = useState('');
+
+  // Quando o cliente faz login enquanto estava na tela de cadastro,
+  // avança automaticamente para a confirmação do agendamento.
+  useEffect(() => {
+    if (client && step === 'client-data') {
+      setStep('confirm');
+      setBookingError('');
+      setAccountExistsMsg('');
+    }
+  }, [client, step]);
 
   const today       = startOfDay(new Date());
   const brasiliaNow = nowBrasilia();
@@ -189,27 +175,12 @@ export default function BookingFlow() {
     try {
       const { appointments } = await createPublicBookingApi(getSlug(), {
         professionalId: selProf.id,
-<<<<<<< Updated upstream
-        serviceIds: selSvcs.map(s => s.id),
-        date: format(selDate, 'yyyy-MM-dd'),
-        startTime: selSlot.slice(0, 5),
-<<<<<<< HEAD
-        clientName: client.name,
-        clientEmail: client.email,
-        clientPhone: client.phone,
-=======
-        clientName: info.name,
-        clientEmail: info.email,
-        clientPhone: info.phone || undefined,
-=======
         serviceIds:     selSvcs.map(s => s.id),
         date:           format(selDate, 'yyyy-MM-dd'),
         startTime:      selSlot.slice(0, 5),
         clientName:     client.name,
         clientEmail:    client.email,
         clientPhone:    client.phone,
->>>>>>> Stashed changes
->>>>>>> dev
       });
       setDoneAppts(appointments);
       setStep('done');
@@ -229,6 +200,7 @@ export default function BookingFlow() {
 
     setSubmitting(true);
     setBookingError('');
+    setAccountExistsMsg('');
     try {
       // Cadastro + agendamento + envio WhatsApp em uma única chamada
       const result = await registerAndBookApi(getSlug(), {
@@ -247,8 +219,17 @@ export default function BookingFlow() {
       setPendingEmail(clientForm.email.trim().toLowerCase());
       setStep('email-pending');
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Erro ao finalizar.';
-      setBookingError(msg);
+      const code = err instanceof ApiError ? err.code : undefined;
+      if (code === 'EMAIL_IN_USE' || code === 'PHONE_IN_USE') {
+        const field = code === 'EMAIL_IN_USE' ? 'e-mail' : 'telefone';
+        setAccountExistsMsg(
+          `Este ${field} já possui uma conta neste estabelecimento. Faça login para continuar com o agendamento.`,
+        );
+      } else if (err instanceof ApiError && code === 'VALIDATION_ERROR' && err.details?.length) {
+        setBookingError(err.details.map(d => d.message).join('. '));
+      } else {
+        setBookingError(err instanceof Error ? err.message : 'Erro ao finalizar.');
+      }
     } finally {
       setSubmitting(false);
     }
@@ -269,42 +250,12 @@ export default function BookingFlow() {
 
   const reset = () => {
     setStep('service');
-<<<<<<< Updated upstream
-    setSelSvcs([]);
-    setSelProf(null);
-    setSelDate(null);
-    setSelSlot(null);
-    setDateOffset(0);
-    setDoneAppts([]);
-=======
     setSelSvcs([]); setSelProf(null); setSelDate(null);
     setSelSlot(null); setDateOffset(0); setDoneAppts([]);
->>>>>>> Stashed changes
     navigate(`/${tenant.slug}`);
   };
 
   const btnStyle = { backgroundColor: tenant.primaryColor };
-<<<<<<< HEAD
-  const stepOrder: Step[] = ['service', 'professional', 'datetime', 'confirm', 'done'];
-=======
-<<<<<<< Updated upstream
-  const stepOrder: Step[] = ['service', 'professional', 'datetime', 'info', 'confirm', 'done'];
->>>>>>> dev
-  const stepIdx = stepOrder.indexOf(step);
-  const stepLabels: Record<Step, string> = {
-    service:      'Serviços',
-    professional: 'Profissional',
-    datetime:     'Data & Hora',
-    confirm:      'Confirmação',
-    done:         'Concluído',
-  };
-
-<<<<<<< HEAD
-  // Gate: cliente não autenticado não pode agendar
-  if (!client) return <BookingAuthGate />;
-
-=======
-=======
   const stepOrder: Step[] = ['service', 'professional', 'datetime', 'confirm', 'done'];
   const stepIdx    = stepOrder.indexOf(step);
   const stepLabels: Record<Step, string> = {
@@ -318,8 +269,6 @@ export default function BookingFlow() {
   };
 
   // Estabelecimento fechado
->>>>>>> Stashed changes
->>>>>>> dev
   if (!tenant.isOpen) {
     return (
       <div className="max-w-md mx-auto text-center py-16 space-y-4">
@@ -594,73 +543,14 @@ export default function BookingFlow() {
             </div>
           )}
 
-<<<<<<< HEAD
-          <Button className="w-full" style={btnStyle} disabled={!selDate || !selSlot} onClick={() => setStep('confirm')}>
-=======
-<<<<<<< Updated upstream
-          <Button className="w-full" style={btnStyle} disabled={!selDate || !selSlot} onClick={() => setStep('info')}>
-=======
           <Button className="w-full" style={btnStyle} disabled={!selDate || !selSlot} onClick={handleDatetimeContinue}>
->>>>>>> Stashed changes
->>>>>>> dev
             Continuar
           </Button>
         </div>
       )}
 
       {/* ══════════════════════════════════════════════════════════════════════
-<<<<<<< HEAD
-          STEP 4 — Confirmação
-=======
-<<<<<<< Updated upstream
-          STEP 4 — Dados do cliente
-      ══════════════════════════════════════════════════════════════════════ */}
-      {step === 'info' && (
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={() => setStep('datetime')}>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <h3 className="text-xl font-semibold">Seus Dados</h3>
-          </div>
-          <div className="space-y-3">
-            <div className="space-y-1">
-              <Label>Nome completo *</Label>
-              <Input placeholder="João Silva" value={info.name} onChange={e => setInfo(i => ({ ...i, name: e.target.value }))} />
-            </div>
-            <div className="space-y-1">
-              <Label>E-mail *</Label>
-              <Input type="email" placeholder="joao@email.com" value={info.email} onChange={e => setInfo(i => ({ ...i, email: e.target.value }))} />
-            </div>
-            <div className="space-y-1">
-              <Label>Telefone *</Label>
-              <Input
-                placeholder="(00) 00000-0000"
-                value={info.phone}
-                onChange={e => {
-                  const digits = e.target.value.replace(/\D/g, '').slice(0, 11);
-                  let masked = '';
-                  if (digits.length === 0) masked = '';
-                  else if (digits.length <= 2) masked = `(${digits}`;
-                  else if (digits.length <= 7) masked = `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
-                  else masked = `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
-                  setInfo(i => ({ ...i, phone: masked }));
-                }}
-              />
-            </div>
-          </div>
-          <Button className="w-full" style={btnStyle} disabled={!info.name || !info.email || !info.phone} onClick={() => setStep('confirm')}>
-            Revisar
-          </Button>
-        </div>
-      )}
-
-      {/* ══════════════════════════════════════════════════════════════════════
-          STEP 5 — Confirmação
-=======
           STEP 4a — Dados do cliente (novo cadastro inline)
->>>>>>> Stashed changes
->>>>>>> dev
       ══════════════════════════════════════════════════════════════════════ */}
       {step === 'client-data' && (
         <div className="space-y-5">
@@ -764,11 +654,32 @@ export default function BookingFlow() {
               <p className="text-sm text-destructive bg-destructive/10 rounded-lg px-3 py-2">{bookingError}</p>
             )}
 
-            <Button type="submit" className="w-full" size="lg" style={btnStyle} disabled={submitting}>
-              {submitting
-                ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Confirmando...</>
-                : 'Confirmar Agendamento'}
-            </Button>
+            {/* Banner de conta já existente */}
+            {accountExistsMsg && (
+              <div className="rounded-lg border border-yellow-300 bg-yellow-50 dark:bg-yellow-900/20 dark:border-yellow-700 p-4 space-y-3">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400 shrink-0 mt-0.5" />
+                  <p className="text-sm text-yellow-800 dark:text-yellow-300">{accountExistsMsg}</p>
+                </div>
+                <Button
+                  type="button"
+                  className="w-full gap-2"
+                  style={btnStyle}
+                  onClick={() => setShowLoginDialog(true)}
+                >
+                  <LogIn className="h-4 w-4" />
+                  Fazer login
+                </Button>
+              </div>
+            )}
+
+            {!accountExistsMsg && (
+              <Button type="submit" className="w-full" size="lg" style={btnStyle} disabled={submitting}>
+                {submitting
+                  ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Confirmando...</>
+                  : 'Confirmar Agendamento'}
+              </Button>
+            )}
           </form>
 
           <p className="text-center text-xs text-muted-foreground">
@@ -776,7 +687,7 @@ export default function BookingFlow() {
             <button
               type="button"
               className="underline hover:text-foreground transition-colors"
-              onClick={() => navigate(`/${tenant.slug}`)}
+              onClick={() => setShowLoginDialog(true)}
             >
               Faça login
             </button>
@@ -853,17 +764,7 @@ export default function BookingFlow() {
       {step === 'confirm' && selSvcs.length > 0 && selProf && selDate && selSlot && client && (
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-<<<<<<< HEAD
-            <Button variant="ghost" size="icon" onClick={() => setStep('datetime')}>
-=======
-<<<<<<< Updated upstream
-            <Button variant="ghost" size="icon" onClick={() => setStep('info')}>
->>>>>>> dev
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-=======
             <Button variant="ghost" size="icon" onClick={() => setStep('datetime')}><ChevronLeft className="h-4 w-4" /></Button>
->>>>>>> Stashed changes
             <h3 className="text-xl font-semibold">Confirmar Agendamento</h3>
           </div>
 
@@ -899,15 +800,7 @@ export default function BookingFlow() {
                   ['Data',    format(selDate, "EEEE, d 'de' MMMM", { locale: ptBR })],
                   ['Início',  selSlot],
                   ['Duração', `${totalDuration} min`],
-<<<<<<< HEAD
-                  ['Cliente', client!.name],
-=======
-<<<<<<< Updated upstream
-                  ['Cliente', info.name],
-=======
                   ['Cliente', client.name],
->>>>>>> Stashed changes
->>>>>>> dev
                 ].map(([l, v]) => (
                   <div key={l} className="flex justify-between">
                     <span className="text-muted-foreground">{l}</span>
@@ -1001,6 +894,12 @@ export default function BookingFlow() {
           <Button onClick={reset} variant="outline" className="w-full">Fazer Novo Agendamento</Button>
         </div>
       )}
+
+      {/* Dialog de login — aberto pelo "Já tem conta?" ou pelo banner de conta existente */}
+      <ClientLoginDialog
+        open={showLoginDialog}
+        onClose={() => setShowLoginDialog(false)}
+      />
     </div>
   );
 }
