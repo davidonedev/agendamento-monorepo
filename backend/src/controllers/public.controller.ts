@@ -1,16 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
-<<<<<<< HEAD
-import bcrypt from 'bcryptjs';
-=======
 <<<<<<< Updated upstream
 =======
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 >>>>>>> Stashed changes
->>>>>>> dev
 import { z } from 'zod';
 import { prisma } from '../config/database';
-import { env } from '../config/env';
 import { AppError } from '../types';
 import { generateTimeSlots } from '../services/schedule.service';
 import { sendVerificationEmail } from '../services/email.service';
@@ -393,12 +388,9 @@ export async function createPublicBooking(req: Request, res: Response, next: Nex
   } catch (err) {
     next(err);
   }
-<<<<<<< HEAD
-=======
 <<<<<<< Updated upstream
 }
 =======
->>>>>>> dev
 }
 
 // ─── Login público de cliente (e-mail + senha) ───────────────────────────────
@@ -423,11 +415,7 @@ export async function loginPublicClient(req: Request, res: Response, next: NextF
 
     const client = await prisma.client.findUnique({
       where: { tenantId_email: { tenantId: tenant.id, email } },
-<<<<<<< HEAD
-      select: { id: true, name: true, email: true, phone: true, passwordHash: true },
-=======
       select: { id: true, name: true, email: true, phone: true, passwordHash: true, emailVerified: true },
->>>>>>> dev
     });
 
     if (!client) {
@@ -443,8 +431,6 @@ export async function loginPublicClient(req: Request, res: Response, next: NextF
       return next(new AppError('E-mail ou senha inválidos.', 401, 'INVALID_CREDENTIALS'));
     }
 
-<<<<<<< HEAD
-=======
     if (!client.emailVerified) {
       return next(new AppError(
         'Você precisa verificar seu e-mail antes de entrar. Verifique sua caixa de entrada.',
@@ -453,7 +439,6 @@ export async function loginPublicClient(req: Request, res: Response, next: NextF
       ));
     }
 
->>>>>>> dev
     res.json({ success: true, data: { id: client.id, name: client.name, email: client.email, phone: client.phone } });
   } catch (err) {
     next(err);
@@ -475,40 +460,17 @@ export async function registerPublicClient(req: Request, res: Response, next: Ne
 
     const tenant = await prisma.tenant.findUnique({
       where: { slug },
-<<<<<<< HEAD
-      select: { id: true, status: true },
-=======
       select: {
         id: true, name: true, status: true,
         whatsappApiUrl: true, whatsappApiKey: true,
         whatsappInstance: true, whatsappTemplate: true,
       },
->>>>>>> dev
     });
 
     if (!tenant || tenant.status === 'suspended') {
       return next(new AppError('Estabelecimento não encontrado', 404));
     }
 
-<<<<<<< HEAD
-    const passwordHash = await bcrypt.hash(data.password, env.BCRYPT_ROUNDS);
-
-    const existing = await prisma.client.findUnique({
-      where: { tenantId_email: { tenantId: tenant.id, email: data.email } },
-      select: { id: true },
-    });
-
-    if (existing) {
-      return next(new AppError('Este e-mail já está cadastrado. Faça login.', 409, 'EMAIL_IN_USE'));
-    }
-
-    const client = await prisma.client.create({
-      data: { tenantId: tenant.id, name: data.name, email: data.email, phone: data.phone, passwordHash },
-      select: { id: true, name: true, email: true, phone: true },
-    });
-
-    res.status(201).json({ success: true, data: client });
-=======
     const existing = await prisma.client.findUnique({
       where: { tenantId_email: { tenantId: tenant.id, email: data.email } },
       select: { id: true, emailVerified: true },
@@ -566,7 +528,6 @@ export async function registerPublicClient(req: Request, res: Response, next: Ne
       success: true,
       data: { message: 'Cadastro iniciado. Verifique seu WhatsApp para ativar sua conta.' },
     });
->>>>>>> dev
   } catch (err) {
     next(err);
   }
@@ -620,8 +581,6 @@ export async function googleAuthPublicClient(req: Request, res: Response, next: 
   }
 }
 
-<<<<<<< HEAD
-=======
 // ─── Verificação de e-mail do cliente ────────────────────────────────────────
 export async function verifyClientEmail(req: Request, res: Response, next: NextFunction) {
   try {
@@ -744,7 +703,6 @@ export async function resendVerificationEmail(req: Request, res: Response, next:
   }
 }
 
->>>>>>> dev
 // ─── Cadastro público de profissional ────────────────────────────────────────
 const professionalRegisterSchema = z.object({
   name:               z.string().min(2, 'Nome muito curto').max(100),
@@ -809,9 +767,6 @@ export async function registerPublicProfessional(req: Request, res: Response, ne
   } catch (err) {
     next(err);
   }
-<<<<<<< HEAD
-}
-=======
 }
 
 // ─── Listar agendamentos do cliente no portal público ─────────────────────────
@@ -1181,4 +1136,3 @@ export async function registerBusiness(req: Request, res: Response, next: NextFu
   }
 }
 >>>>>>> Stashed changes
->>>>>>> dev
