@@ -1,9 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-<<<<<<< Updated upstream
-=======
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
->>>>>>> Stashed changes
 import { z } from 'zod';
 import { prisma } from '../config/database';
 import { AppError } from '../types';
@@ -388,9 +385,6 @@ export async function createPublicBooking(req: Request, res: Response, next: Nex
   } catch (err) {
     next(err);
   }
-<<<<<<< Updated upstream
-}
-=======
 }
 
 // ─── Login público de cliente (e-mail + senha) ───────────────────────────────
@@ -1135,4 +1129,3 @@ export async function registerBusiness(req: Request, res: Response, next: NextFu
     next(err);
   }
 }
->>>>>>> Stashed changes
