@@ -91,6 +91,11 @@ const updateSettingsSchema = z.object({
   bannerUrl: z.string().url().optional().nullable(),
   isOpen: z.boolean().optional(),
   minAdvanceMinutes: z.number().int().min(0).max(1440).optional(),
+  // WhatsApp
+  whatsappApiUrl:   z.string().url('URL inválida').optional().nullable(),
+  whatsappApiKey:   z.string().optional().nullable(),
+  whatsappInstance: z.string().optional().nullable(),
+  whatsappTemplate: z.string().max(2000).optional().nullable(),
 });
 
 export async function updateSettings(req: Request, res: Response, next: NextFunction) {

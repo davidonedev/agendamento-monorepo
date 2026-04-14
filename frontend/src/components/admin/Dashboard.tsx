@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
-import { format } from 'date-fns';
+import { format, formatDistanceToNow, subHours } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Users, Calendar, DollarSign, TrendingUp, Clock, CheckCircle } from 'lucide-react';
+import { Users, Calendar, DollarSign, TrendingUp, Clock, CheckCircle, CalendarPlus, XCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -27,6 +27,19 @@ export default function Dashboard() {
   const todayAppts = appointments
     .filter(a => a.date === today && a.status !== 'cancelled')
     .sort((a, b) => a.startTime.localeCompare(b.startTime));
+
+  // Atividade recente: últimas 24h
+  const cutoff24h = subHours(new Date(), 24).toISOString();
+
+  const recentNewBookings = appointments
+    .filter(a => a.status !== 'cancelled' && a.createdAt >= cutoff24h)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .slice(0, 10);
+
+  const recentCancellations = appointments
+    .filter(a => a.status === 'cancelled' && (a.updatedAt ?? a.createdAt) >= cutoff24h)
+    .sort((a, b) => (b.updatedAt ?? b.createdAt).localeCompare(a.updatedAt ?? a.createdAt))
+    .slice(0, 10);
 
   return (
     <div className="space-y-6">
@@ -126,6 +139,93 @@ export default function Dashboard() {
                 );
               })}
             </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* ── Atividade Recente (últimas 24h) ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Novos agendamentos */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <CalendarPlus className="h-5 w-5 text-green-600 dark:text-green-400" />
+              Novos Agendamentos
+              <Badge variant="outline" className="ml-auto text-xs font-normal">últimas 24h</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {recentNewBookings.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8 text-sm">Nenhum novo agendamento nas últimas 24h</p>
+            ) : (
+              <div className="space-y-2">
+                {recentNewBookings.map(appt => {
+                  const client = clients.find(c => c.id === appt.clientId);
+                  const svc    = services.find(s => s.id === appt.serviceId);
+                  const ago    = formatDistanceToNow(new Date(appt.createdAt), { locale: ptBR, addSuffix: true });
+                  return (
+                    <div key={appt.id} className="flex items-start gap-3 p-3 rounded-lg border bg-green-50/50 dark:bg-green-900/10 border-green-100 dark:border-green-900/30">
+                      <div className="mt-0.5 p-1.5 rounded-lg bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400 shrink-0">
+                        <CalendarPlus className="h-3.5 w-3.5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{client?.name ?? '—'}</p>
+                        <p className="text-xs text-muted-foreground truncate">{svc?.name ?? '—'}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {format(new Date(appt.date + 'T00:00:00'), "d 'de' MMM", { locale: ptBR })} às {appt.startTime}
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <Badge variant={appt.status === 'confirmed' ? 'default' : 'outline'} className="text-[10px]">
+                          {STATUS_LABEL[appt.status]}
+                        </Badge>
+                        <p className="text-[10px] text-muted-foreground/60 mt-1">{ago}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Cancelamentos recentes */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <XCircle className="h-5 w-5 text-red-500 dark:text-red-400" />
+              Cancelamentos
+              <Badge variant="outline" className="ml-auto text-xs font-normal">últimas 24h</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {recentCancellations.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8 text-sm">Nenhum cancelamento nas últimas 24h</p>
+            ) : (
+              <div className="space-y-2">
+                {recentCancellations.map(appt => {
+                  const client = clients.find(c => c.id === appt.clientId);
+                  const svc    = services.find(s => s.id === appt.serviceId);
+                  const ts     = appt.updatedAt ?? appt.createdAt;
+                  const ago    = formatDistanceToNow(new Date(ts), { locale: ptBR, addSuffix: true });
+                  return (
+                    <div key={appt.id} className="flex items-start gap-3 p-3 rounded-lg border bg-red-50/50 dark:bg-red-900/10 border-red-100 dark:border-red-900/30">
+                      <div className="mt-0.5 p-1.5 rounded-lg bg-red-100 dark:bg-red-900/40 text-red-500 dark:text-red-400 shrink-0">
+                        <XCircle className="h-3.5 w-3.5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{client?.name ?? '—'}</p>
+                        <p className="text-xs text-muted-foreground truncate">{svc?.name ?? '—'}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {format(new Date(appt.date + 'T00:00:00'), "d 'de' MMM", { locale: ptBR })} às {appt.startTime}
+                        </p>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground/60 shrink-0 mt-1">{ago}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

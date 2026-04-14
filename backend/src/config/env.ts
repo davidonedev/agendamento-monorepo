@@ -33,4 +33,14 @@ export const env = {
   MAX_FILE_SIZE: parseInt(optional('MAX_FILE_SIZE', '5242880'), 10), // 5MB
 
   BCRYPT_ROUNDS: parseInt(optional('BCRYPT_ROUNDS', '10'), 10),
+
+  // ─── E-mail (SMTP) ─────────────────────────────────────────────────────────
+  SMTP_HOST: optional('SMTP_HOST', 'smtp.gmail.com'),
+  SMTP_PORT: parseInt(optional('SMTP_PORT', '587'), 10),
+  SMTP_USER: optional('SMTP_USER', ''),
+  SMTP_PASS: optional('SMTP_PASS', ''),
+  SMTP_FROM: optional('SMTP_FROM', 'AgendePro <noreply@agendepro.com>'),
+
+  // URL pública do frontend (usada nos links de e-mail)
+  APP_URL: optional('APP_URL', 'http://localhost:5173'),
 } as const;

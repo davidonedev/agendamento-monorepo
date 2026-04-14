@@ -1,11 +1,12 @@
 import { useRef, useState } from 'react';
-import { CheckCircle, Clock, Copy, Edit2, ExternalLink, Eye, EyeOff, Upload, X } from 'lucide-react';
+import { CheckCircle, Clock, Copy, Edit2, ExternalLink, Eye, EyeOff, MessageCircle, Upload, X } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useTenant } from '@/context/TenantContext';
 import { useAuth } from '@/context/AuthContext';
@@ -242,6 +243,31 @@ export default function SettingsView({ section = 'account' }: Props) {
   const [scheduleProf, setScheduleProf] = useState<Professional | null>(null);
   const handleSaveSchedule = async (profId: string, patch: ScheduleForm) => {
     await updateProfessional(profId, patch);
+  };
+
+  // WhatsApp config form
+  const DEFAULT_WA_TEMPLATE = `Olá {{clientName}}! 👋\n\nSeu agendamento em *{{tenantName}}* foi registrado com sucesso!\n\n📅 *Data:* {{date}}\n🕐 *Horário:* {{time}}\n✂️ *Profissional:* {{professional}}\n💈 *Serviços:* {{services}}\n💰 *Total:* {{total}}\n\nPara confirmar seu cadastro, acesse o link:\n{{verificationLink}}\n\n_Link válido por 24 horas._`;
+
+  const [waForm, setWaForm] = useState({
+    whatsappApiUrl:   tenant.whatsappApiUrl   ?? '',
+    whatsappApiKey:   tenant.whatsappApiKey   ?? '',
+    whatsappInstance: tenant.whatsappInstance ?? '',
+    whatsappTemplate: tenant.whatsappTemplate ?? DEFAULT_WA_TEMPLATE,
+  });
+  const [waShowKey, setWaShowKey] = useState(false);
+  const [waSaved,   setWaSaved]   = useState(false);
+
+  const saveWhatsapp = async () => {
+    try {
+      await updateSettings({
+        whatsappApiUrl:   waForm.whatsappApiUrl   || null,
+        whatsappApiKey:   waForm.whatsappApiKey   || null,
+        whatsappInstance: waForm.whatsappInstance || null,
+        whatsappTemplate: waForm.whatsappTemplate || null,
+      });
+      setWaSaved(true);
+      setTimeout(() => setWaSaved(false), 2500);
+    } catch (err) { console.error(err); }
   };
 
   const [advanceMinutes, setAdvanceMinutes] = useState(tenant.minAdvanceMinutes ?? 0);
@@ -537,6 +563,103 @@ export default function SettingsView({ section = 'account' }: Props) {
 
       <Button onClick={savePortal} className="gap-2">
         {portalSaved ? <><CheckCircle className="h-4 w-4" /> Salvo!</> : 'Salvar alterações'}
+      </Button>
+
+      {/* ── WhatsApp ── */}
+      <div className="pt-4">
+        <h3 className="text-lg font-semibold flex items-center gap-2">
+          <MessageCircle className="h-5 w-5 text-green-500" />
+          Integração WhatsApp
+        </h3>
+        <p className="text-muted-foreground text-sm mt-1">
+          Configure a API do WhatsApp para enviar mensagens de verificação e resumos de agendamento.
+          Compatível com <strong>Evolution API</strong> e serviços similares.
+        </p>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Credenciais da API</CardTitle>
+          <CardDescription>
+            Dados de conexão com a instância do WhatsApp. URL no formato{' '}
+            <code className="text-xs bg-muted px-1 rounded">https://api.seuservidor.com</code>
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="wa-url">URL da API</Label>
+            <Input
+              id="wa-url"
+              placeholder="https://api.evolution.app"
+              value={waForm.whatsappApiUrl}
+              onChange={e => setWaForm(f => ({ ...f, whatsappApiUrl: e.target.value }))}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="wa-key">Chave de API (apikey)</Label>
+            <div className="relative">
+              <Input
+                id="wa-key"
+                type={waShowKey ? 'text' : 'password'}
+                placeholder="Sua chave secreta"
+                value={waForm.whatsappApiKey}
+                onChange={e => setWaForm(f => ({ ...f, whatsappApiKey: e.target.value }))}
+                className="pr-10"
+              />
+              <button
+                type="button" tabIndex={-1}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                onClick={() => setWaShowKey(v => !v)}
+              >
+                {waShowKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="wa-instance">Nome da Instância</Label>
+            <Input
+              id="wa-instance"
+              placeholder="minha-barbearia"
+              value={waForm.whatsappInstance}
+              onChange={e => setWaForm(f => ({ ...f, whatsappInstance: e.target.value }))}
+            />
+            <p className="text-xs text-muted-foreground">Nome da instância criada na Evolution API.</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Template da Mensagem</CardTitle>
+          <CardDescription>
+            Personalize o texto enviado ao cliente. Variáveis disponíveis:{' '}
+            {['{{clientName}}','{{tenantName}}','{{date}}','{{time}}','{{professional}}','{{services}}','{{total}}','{{verificationLink}}'].map(v => (
+              <code key={v} className="text-xs bg-muted px-1 rounded mx-0.5">{v}</code>
+            ))}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <Textarea
+            rows={12}
+            className="font-mono text-xs"
+            value={waForm.whatsappTemplate}
+            onChange={e => setWaForm(f => ({ ...f, whatsappTemplate: e.target.value }))}
+            placeholder="Digite o template da mensagem..."
+          />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setWaForm(f => ({ ...f, whatsappTemplate: DEFAULT_WA_TEMPLATE }))}
+          >
+            Restaurar template padrão
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Button onClick={saveWhatsapp} className="gap-2 bg-green-600 hover:bg-green-700 text-white">
+        {waSaved ? <><CheckCircle className="h-4 w-4" /> Salvo!</> : <><MessageCircle className="h-4 w-4" /> Salvar configuração WhatsApp</>}
       </Button>
     </div>
   );

@@ -42,8 +42,8 @@ export default function AdminLayout() {
   const [accountOpen, setAccountOpen] = useState(true);
   const [copied, setCopied]         = useState(false);
 
-  const { notifications, unreadCount, markAllRead, activeToasts, dismissToast } =
-    useAppointmentNotifications(appointments, clients, services);
+  const { notifications, unreadCount, markAllRead, activeToasts, dismissToast, clearAll } =
+    useAppointmentNotifications(appointments, clients, services, `apn_${tenant?.id ?? 'admin'}`);
 
   const handleLogout = () => { logout(); navigate('/login', { replace: true }); };
 
@@ -194,6 +194,7 @@ export default function AdminLayout() {
             markAllRead={markAllRead}
             activeToasts={activeToasts}
             dismissToast={dismissToast}
+            clearAll={clearAll}
           />
           <Button variant="ghost" size="icon" onClick={toggle} title={isDark ? 'Modo claro' : 'Modo escuro'}>
             {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}

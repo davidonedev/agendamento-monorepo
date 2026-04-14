@@ -129,6 +129,21 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
     if (user?.role === 'tenant_admin') refresh();
   }, [user, refresh]);
 
+  // Auto-polling: re-busca agendamentos a cada 30s para detectar novos
+  // agendamentos e cancelamentos feitos pelo cliente, acionando notificações.
+  useEffect(() => {
+    if (user?.role !== 'tenant_admin') return;
+    const id = setInterval(async () => {
+      try {
+        const apts = await listAppointmentsApi();
+        setAppointments(apts);
+      } catch {
+        // falha silenciosa — não interrompe o uso do app
+      }
+    }, 30_000);
+    return () => clearInterval(id);
+  }, [user?.role]);
+
   if (!tenant && !loading) {
     return (
       <div className="flex h-screen items-center justify-center text-muted-foreground">

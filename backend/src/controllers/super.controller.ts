@@ -28,24 +28,50 @@ export async function getTenant(req: Request, res: Response, next: NextFunction)
   try {
     const { id } = req.params;
 
-    const tenant = await prisma.tenant.findUnique({
-      where: { id },
-      include: {
-        professionals: { include: { services: { include: { service: true } } } },
-        services: true,
-        clients: true,
-        appointments: {
-          include: { client: true, professional: true, service: true },
-          orderBy: { date: 'desc' },
-          take: 50,
+    const now        = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const yearStart  = new Date(now.getFullYear(), 0, 1).toISOString();
+
+    const [tenant, todayCount, monthCount, yearCount, todayRev, monthRev, yearRev] = await Promise.all([
+      prisma.tenant.findUnique({
+        where: { id },
+        include: {
+          professionals: {
+            select: {
+              id: true, name: true, specialty: true, avatar: true,
+              _count: { select: { appointments: true } },
+            },
+          },
+          services: {
+            select: { id: true, name: true, price: true, duration: true, category: true },
+          },
+          _count: { select: { appointments: true, clients: true } },
         },
-        _count: { select: { appointments: true, clients: true } },
-      },
-    });
+      }),
+      // Contagens por período
+      prisma.appointment.count({ where: { tenantId: id, date: { gte: todayStart } } }),
+      prisma.appointment.count({ where: { tenantId: id, date: { gte: monthStart } } }),
+      prisma.appointment.count({ where: { tenantId: id, date: { gte: yearStart  } } }),
+      // Receita (apenas agendamentos concluídos)
+      prisma.appointment.aggregate({ where: { tenantId: id, status: 'completed', date: { gte: todayStart } }, _sum: { price: true } }),
+      prisma.appointment.aggregate({ where: { tenantId: id, status: 'completed', date: { gte: monthStart } }, _sum: { price: true } }),
+      prisma.appointment.aggregate({ where: { tenantId: id, status: 'completed', date: { gte: yearStart  } }, _sum: { price: true } }),
+    ]);
 
     if (!tenant) return next(new AppError('Tenant não encontrado', 404));
 
-    res.json({ success: true, data: tenant });
+    res.json({
+      success: true,
+      data: {
+        ...tenant,
+        appointmentStats: {
+          today: { count: todayCount, revenue: todayRev._sum?.price ?? 0 },
+          month: { count: monthCount, revenue: monthRev._sum?.price ?? 0 },
+          year:  { count: yearCount,  revenue: yearRev._sum?.price  ?? 0 },
+        },
+      },
+    });
   } catch (err) {
     next(err);
   }
@@ -211,6 +237,107 @@ export async function forceChangePassword(req: Request, res: Response, next: Nex
     await prisma.user.update({ where: { id }, data: { passwordHash } });
 
     res.json({ success: true, data: { message: 'Senha alterada com sucesso' } });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ─── Planos (PlanConfig) ──────────────────────────────────────────────────────
+
+const PLAN_DEFAULTS = [
+  {
+    plan: 'basic' as const,
+    displayName: 'Basic',
+    defaultPrice: 97,
+    maxProfessionals: 2,
+    maxServices: 3,
+    features: [
+      'Até 2 profissionais',
+      'Agendamento online',
+      'Gestão de clientes',
+      'Portal público personalizado',
+      'Suporte via e-mail',
+    ],
+  },
+  {
+    plan: 'pro' as const,
+    displayName: 'Pro',
+    defaultPrice: 197,
+    maxProfessionals: 5,
+    maxServices: -1,
+    features: [
+      'Até 5 profissionais',
+      'Agendamento online',
+      'Gestão de clientes',
+      'Relatórios avançados',
+      'Portal público personalizado',
+      'Gestão de produtos',
+      'Suporte prioritário',
+    ],
+  },
+  {
+    plan: 'enterprise' as const,
+    displayName: 'Premium',
+    defaultPrice: 397,
+    maxProfessionals: -1,
+    maxServices: -1,
+    features: [
+      'Profissionais ilimitados',
+      'Agendamento online',
+      'Gestão de clientes',
+      'Relatórios avançados',
+      'Portal público personalizado',
+      'Gestão de produtos',
+      'Suporte dedicado 24/7',
+      'Onboarding personalizado',
+    ],
+  },
+];
+
+export async function listPlanConfigs(_req: Request, res: Response, next: NextFunction) {
+  try {
+    // Garante que as configs existam (idempotente)
+    for (const defaults of PLAN_DEFAULTS) {
+      await prisma.planConfig.upsert({
+        where: { plan: defaults.plan },
+        create: defaults,
+        update: {},
+      });
+    }
+
+    const configs = await prisma.planConfig.findMany({
+      orderBy: { plan: 'asc' },
+    });
+
+    res.json({ success: true, data: configs });
+  } catch (err) {
+    next(err);
+  }
+}
+
+const updatePlanConfigSchema = z.object({
+  displayName: z.string().min(1).max(50).optional(),
+  defaultPrice: z.number().min(0).optional(),
+  maxProfessionals: z.number().int().min(-1).optional(),
+  maxServices: z.number().int().min(-1).optional(),
+  features: z.array(z.string().min(1)).optional(),
+});
+
+export async function updatePlanConfig(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { plan } = req.params;
+    if (!['basic', 'pro', 'enterprise'].includes(plan)) {
+      return next(new AppError('Plano inválido', 400));
+    }
+
+    const data = updatePlanConfigSchema.parse(req.body);
+
+    const config = await prisma.planConfig.update({
+      where: { plan: plan as 'basic' | 'pro' | 'enterprise' },
+      data,
+    });
+
+    res.json({ success: true, data: config });
   } catch (err) {
     next(err);
   }
