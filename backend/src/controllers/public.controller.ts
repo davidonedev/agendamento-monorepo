@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import { z } from 'zod';
 import { prisma } from '../config/database';
 import { AppError } from '../types';
+import { env } from '../config/env';
 import { generateTimeSlots } from '../services/schedule.service';
 import { sendVerificationEmail } from '../services/email.service';
 import {
@@ -474,6 +475,21 @@ export async function registerPublicClient(req: Request, res: Response, next: Ne
       return next(new AppError('Este e-mail já está cadastrado neste estabelecimento. Faça login.', 409, 'EMAIL_IN_USE'));
     }
 
+    if (data.phone) {
+      const normalizedPhone = data.phone.replace(/\D/g, '');
+      const existingPhone = await prisma.client.findFirst({
+        where: { tenantId: tenant.id, phone: { contains: normalizedPhone.slice(-8) } },
+        select: { id: true },
+      });
+      if (existingPhone) {
+        return next(new AppError(
+          'Este telefone já está cadastrado neste estabelecimento. Faça login.',
+          409,
+          'PHONE_IN_USE',
+        ));
+      }
+    }
+
     const passwordHash = await bcrypt.hash(data.password, env.BCRYPT_ROUNDS);
 
     const client = await prisma.client.create({
@@ -857,22 +873,31 @@ export async function cancelPublicAppointment(req: Request, res: Response, next:
 // ─── Cadastro + Agendamento combinados (primeiro acesso do cliente) ───────────
 const registerAndBookSchema = z.object({
   // Dados do cliente
-  name:     z.string().min(2, 'Nome muito curto').max(100),
+  name:     z.string().min(2, 'Nome deve ter ao menos 2 caracteres').max(100),
   email:    z.string().email('E-mail inválido'),
-  phone:    z.string().min(10, 'Telefone obrigatório para verificação via WhatsApp'),
+  phone:    z.string()
+    .min(1, 'Telefone é obrigatório')
+    .refine(v => v.replace(/\D/g, '').length >= 10, { message: 'Telefone deve ter ao menos 10 dígitos (com DDD)' }),
   password: z.string().min(6, 'Senha deve ter ao menos 6 caracteres'),
   // Dados do agendamento
   professionalId: z.string().uuid('ID do profissional inválido'),
-  serviceIds:     z.array(z.string().uuid()).min(1, 'Selecione ao menos um serviço'),
-  date:           z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato: YYYY-MM-DD'),
-  startTime:      z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/).transform(t => t.slice(0, 5)),
+  serviceIds:     z.array(z.string().uuid('ID de serviço inválido')).min(1, 'Selecione ao menos um serviço'),
+  date:           z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Data inválida (formato: YYYY-MM-DD)'),
+  startTime:      z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/, 'Horário inválido (formato: HH:MM)').transform(t => t.slice(0, 5)),
   notes:          z.string().max(500).optional(),
 });
 
 export async function registerAndBook(req: Request, res: Response, next: NextFunction) {
   try {
     const { slug } = req.params;
-    const data     = registerAndBookSchema.parse(req.body);
+
+    let data: z.infer<typeof registerAndBookSchema>;
+    try {
+      data = registerAndBookSchema.parse(req.body);
+    } catch (validationErr) {
+      console.error('[registerAndBook] Validation failed. Body received:', JSON.stringify(req.body, null, 2));
+      throw validationErr;
+    }
 
     const tenant = await prisma.tenant.findUnique({
       where: { slug },
@@ -901,6 +926,20 @@ export async function registerAndBook(req: Request, res: Response, next: NextFun
         'Este e-mail já tem cadastro neste estabelecimento. Faça login para agendar.',
         409,
         'EMAIL_IN_USE',
+      ));
+    }
+
+    // Verifica duplicidade de telefone
+    const normalizedPhone = data.phone.replace(/\D/g, '');
+    const existingPhone = await prisma.client.findFirst({
+      where: { tenantId: tenant.id, phone: { contains: normalizedPhone.slice(-8) } },
+      select: { id: true },
+    });
+    if (existingPhone) {
+      return next(new AppError(
+        'Este telefone já tem cadastro neste estabelecimento. Faça login para agendar.',
+        409,
+        'PHONE_IN_USE',
       ));
     }
 

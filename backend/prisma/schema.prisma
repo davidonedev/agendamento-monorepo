@@ -150,25 +150,6 @@ model Service {
 }
 
 model Client {
-<<<<<<< HEAD
-  id           String   @id @default(uuid())
-  tenantId     String
-  name         String
-  email        String
-  phone        String?
-  passwordHash String?  // null = autenticado via Google
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-=======
-<<<<<<< Updated upstream
-  id        String   @id @default(uuid())
-  tenantId  String
-  name      String
-  email     String
-  phone     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-=======
   id             String   @id @default(uuid())
   tenantId       String
   name           String
@@ -178,8 +159,6 @@ model Client {
   emailVerified  Boolean  @default(false)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
->>>>>>> Stashed changes
->>>>>>> dev
 
   tenant       Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   appointments Appointment[]
