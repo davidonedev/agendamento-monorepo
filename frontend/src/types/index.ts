@@ -50,6 +50,7 @@ export interface Appointment {
   price: number;
   notes?: string;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface BlockedSlot {
@@ -96,6 +97,17 @@ export interface Product {
 export type TenantPlan   = 'basic' | 'pro' | 'enterprise';
 export type TenantStatus = 'active' | 'trial' | 'suspended';
 
+export interface PlanConfig {
+  id: string;
+  plan: TenantPlan;
+  displayName: string;
+  defaultPrice: number;
+  maxProfessionals: number; // -1 = ilimitado
+  maxServices: number;      // -1 = ilimitado
+  features: string[];
+  updatedAt: string;
+}
+
 export interface Tenant {
   id: string;
   slug: string;          // URL-safe e.g. "barber-kings"
@@ -114,6 +126,11 @@ export interface Tenant {
   bannerUrl?: string;    // client portal hero banner
   isOpen: boolean;            // shown on client portal
   minAdvanceMinutes: number;  // minimum booking lead time in minutes
+  // WhatsApp
+  whatsappApiUrl?:   string | null;
+  whatsappApiKey?:   string | null;
+  whatsappInstance?: string | null;
+  whatsappTemplate?: string | null;
 }
 
 export interface TenantData {

@@ -70,6 +70,12 @@ model Tenant {
   productCategories ProductCategory[]
   serviceCategories ServiceCategory[]
 
+  // ─── WhatsApp ───────────────────────────────────────────────────────────────
+  whatsappApiUrl   String?   // URL base da API (ex: https://api.evolution.app)
+  whatsappApiKey   String?   // Chave de autenticação (apikey / Bearer)
+  whatsappInstance String?   // Nome da instância (Evolution API)
+  whatsappTemplate String?   // Template da mensagem (com placeholders {{...}})
+
   @@map("tenants")
 }
 
@@ -144,6 +150,7 @@ model Service {
 }
 
 model Client {
+<<<<<<< Updated upstream
   id        String   @id @default(uuid())
   tenantId  String
   name      String
@@ -151,12 +158,37 @@ model Client {
   phone     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+=======
+  id             String   @id @default(uuid())
+  tenantId       String
+  name           String
+  email          String
+  phone          String?
+  passwordHash   String?  // null = autenticado via Google
+  emailVerified  Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+>>>>>>> Stashed changes
 
-  tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant       Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   appointments Appointment[]
+  emailTokens  ClientEmailToken[]
 
   @@unique([tenantId, email])
   @@map("clients")
+}
+
+model ClientEmailToken {
+  id        String    @id @default(uuid())
+  clientId  String
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  client    Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@map("client_email_tokens")
 }
 
 model Appointment {
@@ -223,6 +255,19 @@ model ServiceCategory {
 
   @@unique([tenantId, name])
   @@map("service_categories")
+}
+
+model PlanConfig {
+  id               String     @id @default(uuid())
+  plan             TenantPlan @unique
+  displayName      String
+  defaultPrice     Float
+  maxProfessionals Int        @default(-1) // -1 = ilimitado
+  maxServices      Int        @default(-1) // -1 = ilimitado
+  features         String[]
+  updatedAt        DateTime   @updatedAt
+
+  @@map("plan_configs")
 }
 
 model BlockedSlot {

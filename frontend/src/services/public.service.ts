@@ -82,3 +82,89 @@ export async function createPublicBookingApi(
   const client = ((raw[0] as Record<string, unknown>)?.client ?? {}) as Client;
   return { appointments, client };
 }
+
+// ─── Agendamentos do cliente no portal público ────────────────────────────────
+export interface PublicAppointment extends Appointment {
+  professional?: { id: string; name: string; specialty: string };
+  service?:      { id: string; name: string; duration: number; price: number };
+}
+
+export async function getClientAppointmentsApi(
+  slug: string,
+  clientId: string,
+): Promise<PublicAppointment[]> {
+  return api.get<PublicAppointment[]>(`/public/${slug}/my-appointments?clientId=${clientId}`);
+}
+
+// ─── Cancelar agendamento pelo cliente ────────────────────────────────────────
+export async function cancelPublicAppointmentApi(
+  slug: string,
+  appointmentId: string,
+  clientId: string,
+): Promise<void> {
+  await api.patch(`/public/${slug}/appointments/${appointmentId}/cancel`, { clientId });
+}
+
+// ─── Cadastro + Agendamento combinados (novo cliente, verifica via WhatsApp) ──
+
+export interface RegisterAndBookPayload {
+  // Cliente
+  name:     string;
+  email:    string;
+  phone:    string;
+  password: string;
+  // Agendamento
+  professionalId: string;
+  serviceIds:     string[];
+  date:           string;
+  startTime:      string;
+  notes?:         string;
+}
+
+export interface RegisterAndBookResult {
+  appointments: Appointment[];
+  message:      string;
+  phone:        string;
+}
+
+export async function registerAndBookApi(
+  slug: string,
+  payload: RegisterAndBookPayload,
+): Promise<RegisterAndBookResult> {
+  const raw = await api.post<{ appointments: Record<string, unknown>[]; message: string; phone: string }>(
+    `/public/${slug}/register-and-book`,
+    payload,
+  );
+  return {
+    appointments: raw.appointments.map(a => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { client: _c, professional: _p, service: _s, ...rest } = a;
+      return rest as Appointment;
+    }),
+    message: raw.message,
+    phone:   raw.phone,
+  };
+}
+
+// ─── Verificação de e-mail ────────────────────────────────────────────────────
+
+export interface ClientSessionData {
+  id:     string;
+  name:   string;
+  email:  string;
+  phone?: string;
+}
+
+export async function verifyClientEmailApi(
+  slug: string,
+  token: string,
+): Promise<ClientSessionData> {
+  return api.get<ClientSessionData>(`/public/${slug}/verify-email?token=${encodeURIComponent(token)}`);
+}
+
+export async function resendVerificationEmailApi(
+  slug: string,
+  email: string,
+): Promise<void> {
+  await api.post(`/public/${slug}/resend-verification`, { email });
+}

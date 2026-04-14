@@ -9,6 +9,8 @@ import {
   listUsers,
   updateUserEmail,
   forceChangePassword,
+  listPlanConfigs,
+  updatePlanConfig,
 } from '../controllers/super.controller';
 import { authenticate, authorize } from '../middleware/auth.middleware';
 
@@ -19,6 +21,12 @@ router.use(authenticate, authorize('super_admin'));
 
 // GET /api/super/metrics
 router.get('/metrics', getPlatformMetrics);
+
+// GET /api/super/plans
+router.get('/plans', listPlanConfigs);
+
+// PATCH /api/super/plans/:plan
+router.patch('/plans/:plan', updatePlanConfig);
 
 // GET /api/super/tenants
 router.get('/tenants', listTenants);

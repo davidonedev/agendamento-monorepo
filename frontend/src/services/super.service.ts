@@ -1,5 +1,5 @@
 import { api } from '../lib/api';
-import type { Tenant, TenantData } from '../types';
+import type { Tenant, TenantData, PlanConfig, TenantPlan } from '../types';
 
 // ─── Métricas ─────────────────────────────────────────────────────────────────
 export interface PlatformMetrics {
@@ -33,8 +33,25 @@ export async function listTenantsApi(): Promise<TenantWithCounts[]> {
   return api.get<TenantWithCounts[]>('/super/tenants');
 }
 
-export async function getTenantDetailApi(id: string): Promise<TenantData> {
-  return api.get<TenantData>(`/super/tenants/${id}`);
+// Estatísticas de agendamento por período (sem dados sensíveis de clientes)
+export interface TenantPeriodStat {
+  count: number;
+  revenue: number;
+}
+export interface TenantAppointmentStats {
+  today: TenantPeriodStat;
+  month: TenantPeriodStat;
+  year:  TenantPeriodStat;
+}
+
+export interface TenantDetailResponse extends TenantWithCounts {
+  professionals: { id: string; name: string; specialty: string; avatar?: string; _count: { appointments: number } }[];
+  services:      { id: string; name: string; price: number; duration: number; category?: string }[];
+  appointmentStats: TenantAppointmentStats;
+}
+
+export async function getTenantDetailApi(id: string): Promise<TenantDetailResponse> {
+  return api.get<TenantDetailResponse>(`/super/tenants/${id}`);
 }
 
 export interface CreateTenantPayload {
@@ -87,4 +104,25 @@ export async function updateUserEmailApi(id: string, email: string): Promise<Pla
 
 export async function forceChangePasswordApi(id: string, newPassword: string): Promise<void> {
   return api.put(`/super/users/${id}/password`, { newPassword });
+}
+
+// ─── Planos (PlanConfig) ──────────────────────────────────────────────────────
+
+export async function listPlanConfigsApi(): Promise<PlanConfig[]> {
+  return api.get<PlanConfig[]>('/super/plans');
+}
+
+export interface UpdatePlanConfigPayload {
+  displayName?: string;
+  defaultPrice?: number;
+  maxProfessionals?: number;
+  maxServices?: number;
+  features?: string[];
+}
+
+export async function updatePlanConfigApi(
+  plan: TenantPlan,
+  payload: UpdatePlanConfigPayload
+): Promise<PlanConfig> {
+  return api.patch<PlanConfig>(`/super/plans/${plan}`, payload);
 }

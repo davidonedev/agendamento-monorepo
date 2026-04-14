@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { usePlatform } from '@/context/PlatformContext';
 import { formatCurrency } from '@/lib/utils';
+import { TenantAvatar } from './TenantAvatar';
 
 const STATUS_CONFIG = {
   active:    { label: 'Ativo',      variant: 'success'     as const },
@@ -108,12 +109,12 @@ export default function SuperDashboard() {
               const pc = PLAN_CONFIG[tenant.plan];
               return (
                 <div key={tenant.id} className="flex items-center gap-4 p-3 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors">
-                  <div
-                    className="h-10 w-10 rounded-lg flex items-center justify-center text-white font-bold text-sm shrink-0"
-                    style={{ backgroundColor: tenant.primaryColor }}
-                  >
-                    {tenant.name.split(' ').map((w: string) => w[0]).join('').slice(0, 2)}
-                  </div>
+                  <TenantAvatar
+                    name={tenant.name}
+                    logoUrl={tenant.logoUrl}
+                    primaryColor={tenant.primaryColor}
+                    size="md"
+                  />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="font-semibold text-sm">{tenant.name}</p>
