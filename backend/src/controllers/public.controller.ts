@@ -880,8 +880,8 @@ const registerAndBookSchema = z.object({
     .refine(v => v.replace(/\D/g, '').length >= 10, { message: 'Telefone deve ter ao menos 10 dígitos (com DDD)' }),
   password: z.string().min(6, 'Senha deve ter ao menos 6 caracteres'),
   // Dados do agendamento
-  professionalId: z.string().uuid('ID do profissional inválido'),
-  serviceIds:     z.array(z.string().uuid('ID de serviço inválido')).min(1, 'Selecione ao menos um serviço'),
+  professionalId: z.string().min(1, 'Profissional é obrigatório'),
+  serviceIds:     z.array(z.string().min(1)).min(1, 'Selecione ao menos um serviço'),
   date:           z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Data inválida (formato: YYYY-MM-DD)'),
   startTime:      z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/, 'Horário inválido (formato: HH:MM)').transform(t => t.slice(0, 5)),
   notes:          z.string().max(500).optional(),
