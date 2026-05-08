@@ -19,9 +19,8 @@ export const env = {
 
   PORT: parseInt(optional('PORT', '3333'), 10),
 
-  // 🔥 OBRIGATÓRIOS (não pode usar fallback)
-  DATABASE_URL:"postgresql://postgres:root@localhost:5432/agendepro?schema=public",
-  
+  DATABASE_URL: required('DATABASE_URL'),
+
   JWT_SECRET: required('JWT_SECRET'),
 
   JWT_EXPIRES_IN: optional('JWT_EXPIRES_IN', '7d'),
