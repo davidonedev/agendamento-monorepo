@@ -2,6 +2,8 @@
  * Avatar do tenant reutilizável para todas as views do super admin.
  * Prioriza sempre a logoUrl do tenant; cai para iniciais com a cor do tenant como fundo.
  */
+import { hexToHslVars } from '@/lib/utils';
+
 interface TenantAvatarProps {
   name: string;
   logoUrl?: string | null;
@@ -17,6 +19,8 @@ const SIZE_CLASS = {
   lg: 'h-12 w-12 text-base rounded-xl',
   xl: 'h-14 w-14 text-lg rounded-xl',
 };
+
+const HEX = /^#[0-9a-fA-F]{6}$/;
 
 export function TenantAvatar({ name, logoUrl, primaryColor, size = 'md', className = '' }: TenantAvatarProps) {
   const sizeClass = SIZE_CLASS[size];
@@ -37,9 +41,13 @@ export function TenantAvatar({ name, logoUrl, primaryColor, size = 'md', classNa
     );
   }
 
+  // Texto escuro em cores claras (ex.: amarelo) para manter o contraste
+  const isLight = HEX.test(primaryColor) && hexToHslVars(primaryColor).isLight;
+
   return (
     <div
-      className={`${sizeClass} ${className} flex items-center justify-center text-white font-bold shrink-0`}
+      aria-hidden="true"
+      className={`${sizeClass} ${className} flex items-center justify-center font-bold shrink-0 ${isLight ? 'text-slate-900' : 'text-white'}`}
       style={{ backgroundColor: primaryColor }}
     >
       {initials}

@@ -120,6 +120,7 @@ export interface Tenant {
   plan: TenantPlan;
   monthlyPrice: number;  // R$ per plan
   createdAt: string;
+  updatedAt?: string;
   primaryColor: string;  // hex — client portal branding
   adminColor?: string;   // hex — admin sidebar/platform branding (falls back to primaryColor)
   logoUrl?: string;      // barbershop logo (base64 or URL)

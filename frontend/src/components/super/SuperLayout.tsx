@@ -4,6 +4,7 @@ import { LayoutDashboard, Building2, BarChart3, CreditCard, LogOut, Menu, X, Sci
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { ToastProvider } from '@/components/ui/toast';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/hooks/useTheme';
 import { hexToHslVars } from '@/lib/utils';
@@ -121,7 +122,9 @@ export default function SuperLayout() {
           </div>
         </header>
         <main className="flex-1 overflow-y-auto p-6">
-          <Outlet />
+          <ToastProvider>
+            <Outlet />
+          </ToastProvider>
         </main>
       </div>
     </div>
