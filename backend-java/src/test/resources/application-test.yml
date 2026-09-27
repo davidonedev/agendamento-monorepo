@@ -1,0 +1,15 @@
+app:
+  seed:
+    enabled: false
+  jwt:
+    secret: test-secret-key-for-integration-tests-only-not-for-production-use
+    expires-in: 1h
+  cors:
+    origins: http://localhost:5173
+
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
