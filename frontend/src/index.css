@@ -63,3 +63,62 @@
     min-height: 100vh;
   }
 }
+
+/* ─── Landing page ─────────────────────────────────────────────────────────── */
+@layer utilities {
+  .border-gradient {
+    border: 1.5px solid transparent;
+    background:
+      linear-gradient(#ffffff, #ffffff) padding-box,
+      linear-gradient(135deg, #0F6B66, #B9A7EE) border-box;
+  }
+  .mask-fade-x {
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
+    mask-image: linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
+  }
+}
+
+html { scroll-behavior: smooth; }
+section[id] { scroll-margin-top: 88px; }
+
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity .7s cubic-bezier(.2,.7,.2,1), transform .7s cubic-bezier(.2,.7,.2,1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.reveal.is-visible { opacity: 1; transform: none; }
+
+.hero-mockup {
+  transform: perspective(1400px) rotateX(18deg) translateY(40px) scale(.96);
+  opacity: 0;
+  animation: mockup-in 1.2s cubic-bezier(.2,.7,.2,1) .35s forwards;
+}
+@keyframes mockup-in {
+  to { transform: perspective(1400px) rotateX(0) translateY(0) scale(1); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .reveal, .reveal.is-visible { opacity: 1; transform: none; transition: none; }
+  .hero-mockup { animation: none; opacity: 1; transform: none; }
+  .animate-marquee, .animate-marquee-reverse, .animate-float, .animate-float-delayed { animation: none !important; }
+}
+
+.hero-in {
+  opacity: 0;
+  transform: translateY(16px);
+  filter: blur(6px);
+  animation: hero-in .9s cubic-bezier(.2,.7,.2,1) forwards;
+}
+@keyframes hero-in { to { opacity: 1; transform: none; filter: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .hero-in { animation: none; opacity: 1; transform: none; filter: none; }
+}
+
+/* Troca de segmento no hero: o conteúdo remonta (key) e entra com um fade curto */
+.seg-swap { animation: seg-swap .35s cubic-bezier(.2,.7,.2,1); }
+@keyframes seg-swap { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .seg-swap { animation: none; }
+}

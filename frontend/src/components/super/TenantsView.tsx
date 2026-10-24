@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   AlertCircle, Building2, LayoutGrid, Plus, RefreshCw, Search, SearchX, Table2, X,
 } from 'lucide-react';
@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePlatform } from '@/context/PlatformContext';
+import { useAuth } from '@/context/AuthContext';
 import { cn, formatCurrency } from '@/lib/utils';
 import type { TenantPlan, TenantStatus } from '@/types';
 import type { TenantWithCounts } from '@/services/super.service';
@@ -140,6 +141,8 @@ function EmptyState({ icon: Icon, title, description, action }: EmptyStateProps)
 
 export default function TenantsView() {
   const { tenants, planConfigs, loading, error, refreshTenants } = usePlatform();
+  const { impersonateTenant } = useAuth();
+  const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
 
   const [createOpen, setCreateOpen] = useState(false);
@@ -208,6 +211,10 @@ export default function TenantsView() {
     : [...SORT_PRESETS, { value: sortValue, label: 'Ordem da tabela' }];
 
   const openStatus = (tenant: TenantWithCounts, action: StatusAction) => setStatusTarget({ tenant, action });
+
+  const handleImpersonate = (tenant: TenantWithCounts) => {
+    impersonateTenant(tenant.id).then(() => navigate('/admin/dashboard')).catch(() => {});
+  };
 
   // ── Estados de carregamento e erro ─────────────────────────────────────────
   if (loading && tenants.length === 0) return <LoadingState />;
@@ -353,6 +360,7 @@ export default function TenantsView() {
                   tenant={tenant}
                   planConfigs={planConfigs}
                   onEdit={setEditTenant}
+                  onImpersonate={handleImpersonate}
                   onStatus={openStatus}
                   onDelete={setDeleteTarget}
                 />
@@ -365,6 +373,7 @@ export default function TenantsView() {
               sort={sort}
               onSort={handleSort}
               onEdit={setEditTenant}
+              onImpersonate={handleImpersonate}
               onStatus={openStatus}
               onDelete={setDeleteTarget}
             />

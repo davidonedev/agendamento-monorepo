@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useTenant } from '@/context/TenantContext';
 import { useAuth } from '@/context/AuthContext';
-import { updateMeApi, changePasswordApi } from '@/services/auth.service';
+import { ChangeEmailCard } from '@/components/account/ChangeEmailCard';
 import type { Professional } from '@/types';
 
 const DAY_LABELS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -170,7 +170,7 @@ export default function SettingsView({ section = 'account' }: Props) {
   const { user, updateUser, changePassword } = useAuth();
 
   // Credentials form
-  const [credForm, setCredForm]       = useState({ name: user?.name ?? '', email: user?.email ?? '' });
+  const [credForm, setCredForm]       = useState({ name: user?.name ?? '' });
   const [credSaved, setCredSaved]     = useState(false);
   const [credError, setCredError]     = useState('');
   const [pwdForm, setPwdForm]         = useState({ current: '', next: '', confirm: '' });
@@ -181,7 +181,7 @@ export default function SettingsView({ section = 'account' }: Props) {
   const saveCredentials = async () => {
     setCredError('');
     try {
-      await updateUser({ name: credForm.name, email: credForm.email });
+      await updateUser({ name: credForm.name });
       setCredSaved(true);
       setTimeout(() => setCredSaved(false), 2500);
     } catch (err) {
@@ -392,17 +392,13 @@ export default function SettingsView({ section = 'account' }: Props) {
       {/* Credenciais de acesso */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">E-mail e Nome</CardTitle>
-          <CardDescription>Dados de acesso à plataforma</CardDescription>
+          <CardTitle className="text-base">Nome</CardTitle>
+          <CardDescription>Como você aparece na plataforma</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-1">
             <Label>Nome</Label>
             <Input value={credForm.name} onChange={e => setCredForm(f => ({ ...f, name: e.target.value }))} />
-          </div>
-          <div className="space-y-1">
-            <Label>E-mail</Label>
-            <Input type="email" value={credForm.email} onChange={e => setCredForm(f => ({ ...f, email: e.target.value }))} />
           </div>
           {credError && (
             <div className="flex items-center gap-2 text-destructive text-sm bg-destructive/10 rounded-md px-3 py-2">
@@ -414,6 +410,9 @@ export default function SettingsView({ section = 'account' }: Props) {
           </Button>
         </CardContent>
       </Card>
+
+      {/* Troca de e-mail (senha atual + confirmação pelo novo e-mail) */}
+      <ChangeEmailCard />
 
       {/* Troca de senha */}
       <Card>

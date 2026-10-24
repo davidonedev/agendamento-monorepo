@@ -8,8 +8,14 @@ import { PublicClientProvider }   from './context/PublicClientContext';
 import { ProfessionalProvider }    from './context/ProfessionalContext';
 
 // Pages & layouts
+import LandingPage           from './pages/LandingPage';
 import LoginPage             from './pages/LoginPage';
 import SignupPage            from './pages/SignupPage';
+import ForgotPasswordPage    from './pages/ForgotPasswordPage';
+import ResetPasswordPage     from './pages/ResetPasswordPage';
+import ConfirmEmailChangePage from './pages/ConfirmEmailChangePage';
+import AccessHelpPage        from './pages/AccessHelpPage';
+import AccessHelpList        from './components/account/AccessHelpList';
 import SuperLayout           from './components/super/SuperLayout';
 import SuperDashboard        from './components/super/SuperDashboard';
 import TenantsView           from './components/super/TenantsView';
@@ -66,12 +72,16 @@ function ProfessionalGuard({ children }: { children: React.ReactNode }) {
 function AppRoutes() {
   return (
     <Routes>
-      {/* Default redirect */}
-      <Route index element={<Navigate to="/login" replace />} />
+      {/* Landing page */}
+      <Route index element={<LandingPage />} />
 
       {/* Auth */}
       <Route path="login"  element={<LoginPage />} />
       <Route path="signup" element={<SignupPage />} />
+      <Route path="forgot-password"      element={<ForgotPasswordPage />} />
+      <Route path="reset-password"       element={<ResetPasswordPage />} />
+      <Route path="confirm-email-change" element={<ConfirmEmailChangePage />} />
+      <Route path="access-help"          element={<AccessHelpPage />} />
 
       {/* Super admin */}
       <Route path="super" element={<SuperGuard><SuperLayout /></SuperGuard>}>
@@ -82,6 +92,7 @@ function AppRoutes() {
         <Route path="metrics"     element={<PlatformMetricsView />} />
         <Route path="plans"       element={<PlansView />} />
         <Route path="account"     element={<SuperAccountView />} />
+        <Route path="access-help" element={<AccessHelpList scope="super" />} />
       </Route>
 
       {/* Tenant admin */}
@@ -95,6 +106,7 @@ function AppRoutes() {
         <Route path="products"       element={<ProductsView />} />
         <Route path="reminders"      element={<RemindersView />} />
         <Route path="revenue"        element={<RevenueView />} />
+        <Route path="access-help"    element={<AccessHelpList scope="admin" />} />
         {/* Minha Conta — subseções */}
         <Route path="account"          element={<SettingsView section="account" />} />
         <Route path="account/portal"   element={<SettingsView section="portal" />} />

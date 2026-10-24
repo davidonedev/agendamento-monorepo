@@ -1,7 +1,10 @@
 import React, { createContext, useContext, useState } from 'react';
 import type { AuthUser } from '../types';
 import { loginApi, logoutApi, updateMeApi, changePasswordApi } from '../services/auth.service';
-import { ApiError } from '../lib/api';
+import { impersonateTenantApi } from '../services/super.service';
+import { ApiError, saveSession } from '../lib/api';
+
+export const IMPERSONATION_BACKUP_KEY = 'agendepro_super_backup';
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -9,6 +12,7 @@ interface AuthContextType {
   logout: () => void;
   updateUser: (payload: { name?: string; email?: string }) => Promise<void>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  impersonateTenant: (tenantId: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -93,8 +97,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await changePasswordApi({ currentPassword, newPassword });
   };
 
+  const impersonateTenant = async (tenantId: string): Promise<void> => {
+    const data = await impersonateTenantApi(tenantId);
+    // salva a sessão atual do super admin como backup no localStorage
+    const currentRaw = sessionStorage.getItem(SESSION_KEY);
+    if (currentRaw) {
+      try { localStorage.setItem(IMPERSONATION_BACKUP_KEY, currentRaw); } catch {}
+    }
+    saveSession(data.token, data.user);
+    const authUser: AuthUser = {
+      id: data.user.id, name: data.user.name, email: data.user.email,
+      password: '', role: data.user.role as AuthUser['role'],
+      tenantId: data.user.tenantId ?? undefined,
+      professionalId: data.user.professionalId ?? undefined,
+    };
+    setUser(authUser);
+    const raw = sessionStorage.getItem(SESSION_KEY);
+    if (raw) {
+      try {
+        const session = JSON.parse(raw);
+        sessionStorage.setItem(SESSION_KEY, JSON.stringify({ ...session, user: authUser }));
+      } catch {}
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, updateUser, changePassword }}>
+    <AuthContext.Provider value={{ user, login, logout, updateUser, changePassword, impersonateTenant }}>
       {children}
     </AuthContext.Provider>
   );

@@ -13,6 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/toast';
 import { usePlatform } from '@/context/PlatformContext';
+import { useAuth } from '@/context/AuthContext';
 import { formatCurrency } from '@/lib/utils';
 import { getTenantDetailApi, type TenantDetailResponse, type TenantWithCounts } from '@/services/super.service';
 import { DeleteTenantDialog, StatusConfirmDialog, type StatusTarget } from './TenantConfirmDialogs';
@@ -118,6 +119,7 @@ export default function TenantDetailView() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const { tenants, planConfigs, metrics, loading: platformLoading } = usePlatform();
+  const { impersonateTenant } = useAuth();
   const { toast } = useToast();
 
   const [result, setResult] = useState<DetailResult | null>(null);
@@ -247,6 +249,7 @@ export default function TenantDetailView() {
             statusActions={otherActions}
             showDetails={false}
             showPortal={false}
+            onImpersonate={() => impersonateTenant(tenant.id).then(() => navigate('/admin/dashboard')).catch(() => {})}
             onStatus={openStatus}
             onDelete={() => setDeleteOpen(true)}
           />

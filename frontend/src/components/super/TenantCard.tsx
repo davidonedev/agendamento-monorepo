@@ -16,11 +16,12 @@ interface TenantCardProps {
   tenant: TenantWithCounts;
   planConfigs: PlanConfig[];
   onEdit: (tenant: TenantWithCounts) => void;
+  onImpersonate: (tenant: TenantWithCounts) => void;
   onStatus: (tenant: TenantWithCounts, action: StatusAction) => void;
   onDelete: (tenant: TenantWithCounts) => void;
 }
 
-export function TenantCard({ tenant, planConfigs, onEdit, onStatus, onDelete }: TenantCardProps) {
+export function TenantCard({ tenant, planConfigs, onEdit, onImpersonate, onStatus, onDelete }: TenantCardProps) {
   const status = STATUS_CONFIG[tenant.status];
   const plan = PLAN_CONFIG[tenant.plan];
   const counts = tenant._count;
@@ -56,6 +57,7 @@ export function TenantCard({ tenant, planConfigs, onEdit, onStatus, onDelete }: 
               tenant={tenant}
               statusActions={getStatusActions(tenant.status)}
               onEdit={() => onEdit(tenant)}
+              onImpersonate={() => onImpersonate(tenant)}
               onStatus={action => onStatus(tenant, action)}
               onDelete={() => onDelete(tenant)}
             />

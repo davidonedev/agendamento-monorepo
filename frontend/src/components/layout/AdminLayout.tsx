@@ -3,12 +3,12 @@ import { NavLink, useNavigate, Outlet } from 'react-router-dom';
 import {
   LayoutDashboard, Calendar, Users, UserCog, BarChart3, LogOut, Menu, X,
   Settings, Sun, Moon, ExternalLink, Scissors, Package, Bell,
-  UserCircle, Globe, Clock, ChevronDown, Copy, CheckCircle,
+  UserCircle, Globe, Clock, ChevronDown, Copy, CheckCircle, LifeBuoy, Shield,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { NotificationBell } from '@/components/ui/NotificationBell';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth, IMPERSONATION_BACKUP_KEY } from '@/context/AuthContext';
 import { useTenant } from '@/context/TenantContext';
 import { useTheme } from '@/hooks/useTheme';
 import { hexToHslVars } from '@/lib/utils';
@@ -23,6 +23,7 @@ const NAV_ITEMS = [
   { to: '/admin/products',      label: 'Produtos',      icon: Package         },
   { to: '/admin/reminders',     label: 'Lembretes',     icon: Bell            },
   { to: '/admin/revenue',       label: 'Faturamento',   icon: BarChart3       },
+  { to: '/admin/access-help',   label: 'Pedidos de acesso', icon: LifeBuoy    },
 ];
 
 const ACCOUNT_ITEMS = [
@@ -41,6 +42,22 @@ export default function AdminLayout() {
   const [open, setOpen]             = useState(false);
   const [accountOpen, setAccountOpen] = useState(true);
   const [copied, setCopied]         = useState(false);
+
+  const [impersonating] = useState<string | null>(() => {
+    try { return localStorage.getItem(IMPERSONATION_BACKUP_KEY) ? (tenant?.name ?? 'tenant') : null; } catch { return null; }
+  });
+
+  const exitImpersonation = () => {
+    try {
+      const backup = localStorage.getItem(IMPERSONATION_BACKUP_KEY);
+      if (backup) {
+        sessionStorage.setItem('agendepro_session', backup);
+        localStorage.removeItem(IMPERSONATION_BACKUP_KEY);
+      }
+    } catch {}
+    logout();
+    window.location.href = '/super/tenants';
+  };
 
   const { notifications, unreadCount, markAllRead, activeToasts, dismissToast, clearAll } =
     useAppointmentNotifications(appointments, clients, services, `apn_${tenant?.id ?? 'admin'}`);
@@ -204,6 +221,22 @@ export default function AdminLayout() {
             {user?.name.split(' ').map(w => w[0]).join('').slice(0, 2)}
           </div>
         </header>
+        {impersonating && (
+          <div className="shrink-0 flex items-center gap-3 border-b bg-amber-50 px-4 py-2 text-sm dark:bg-amber-950/30">
+            <Shield className="h-4 w-4 shrink-0 text-amber-600" />
+            <span className="flex-1 text-amber-800 dark:text-amber-300">
+              Acessando como admin — <strong>{impersonating}</strong>
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 border-amber-300 text-xs text-amber-700 hover:bg-amber-100 dark:border-amber-700 dark:text-amber-300"
+              onClick={exitImpersonation}
+            >
+              Voltar ao Super Admin
+            </Button>
+          </div>
+        )}
         <main className="flex-1 overflow-y-auto p-6">
           <Outlet />
         </main>

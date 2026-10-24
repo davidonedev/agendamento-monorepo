@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Eye, ExternalLink, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { Eye, ExternalLink, LogIn, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -13,12 +13,13 @@ interface TenantActionsMenuProps {
   showDetails?: boolean;
   showPortal?: boolean;
   onEdit?: () => void;
+  onImpersonate?: () => void;
   onStatus: (action: StatusAction) => void;
   onDelete: () => void;
 }
 
 export function TenantActionsMenu({
-  tenant, statusActions, showDetails = true, showPortal = true, onEdit, onStatus, onDelete,
+  tenant, statusActions, showDetails = true, showPortal = true, onEdit, onImpersonate, onStatus, onDelete,
 }: TenantActionsMenuProps) {
   return (
     <DropdownMenu modal={false}>
@@ -42,6 +43,9 @@ export function TenantActionsMenu({
         )}
         {onEdit && (
           <DropdownMenuItem onSelect={onEdit}><Pencil /> Editar</DropdownMenuItem>
+        )}
+        {onImpersonate && (
+          <DropdownMenuItem onSelect={onImpersonate}><LogIn /> Acessar painel</DropdownMenuItem>
         )}
         {statusActions.map(action => (
           <DropdownMenuItem

@@ -106,6 +106,20 @@ export async function forceChangePasswordApi(id: string, newPassword: string): P
   return api.put(`/super/users/${id}/password`, { newPassword });
 }
 
+// ─── Impersonation ────────────────────────────────────────────────────────────
+export interface ImpersonateResponse {
+  token: string;
+  user: {
+    id: string; name: string; email: string; role: string;
+    tenantId: string | null; professionalId: string | null;
+    tenant?: { id: string; slug: string; name: string; status: string; plan: string } | null;
+  };
+}
+
+export async function impersonateTenantApi(tenantId: string): Promise<ImpersonateResponse> {
+  return api.post<ImpersonateResponse>(`/super/tenants/${tenantId}/impersonate`, {});
+}
+
 // ─── Planos (PlanConfig) ──────────────────────────────────────────────────────
 
 export async function listPlanConfigsApi(): Promise<PlanConfig[]> {

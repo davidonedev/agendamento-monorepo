@@ -64,11 +64,12 @@ interface TenantsTableProps {
   sort: { key: SortKey; dir: SortDir };
   onSort: (key: SortKey) => void;
   onEdit: (tenant: TenantWithCounts) => void;
+  onImpersonate: (tenant: TenantWithCounts) => void;
   onStatus: (tenant: TenantWithCounts, action: StatusAction) => void;
   onDelete: (tenant: TenantWithCounts) => void;
 }
 
-export function TenantsTable({ tenants, planConfigs, sort, onSort, onEdit, onStatus, onDelete }: TenantsTableProps) {
+export function TenantsTable({ tenants, planConfigs, sort, onSort, onEdit, onImpersonate, onStatus, onDelete }: TenantsTableProps) {
   const navigate = useNavigate();
 
   return (
@@ -148,6 +149,7 @@ export function TenantsTable({ tenants, planConfigs, sort, onSort, onEdit, onSta
                         tenant={tenant}
                         statusActions={getStatusActions(tenant.status)}
                         onEdit={() => onEdit(tenant)}
+                        onImpersonate={() => onImpersonate(tenant)}
                         onStatus={action => onStatus(tenant, action)}
                         onDelete={() => onDelete(tenant)}
                       />

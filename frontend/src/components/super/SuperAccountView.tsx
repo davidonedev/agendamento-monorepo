@@ -7,12 +7,12 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useAuth } from '@/context/AuthContext';
-import { updateMeApi, changePasswordApi } from '@/services/auth.service';
 import {
   listUsersApi, updateUserEmailApi, forceChangePasswordApi,
   type PlatformUser,
 } from '@/services/super.service';
 import { getSuperColor } from './SuperSettingsView';
+import { ChangeEmailCard } from '@/components/account/ChangeEmailCard';
 
 // ─── Color picker (reaproveitado da SuperSettingsView) ────────────────────────
 const PRESET_COLORS = [
@@ -119,45 +119,19 @@ function SettingsTab() {
 
 // ─── Tab: Minha conta (credenciais próprias + gerenciar usuários) ─────────────
 function AccountTab() {
-  const { user, updateUser, changePassword } = useAuth();
+  const { changePassword } = useAuth();
 
   // ── Credenciais próprias ──────────────────────────────────────────────────
-  const [emailForm, setEmailForm] = useState({ email: user?.email ?? '', confirm: '' });
-  const [emailSaving, setEmailSaving] = useState(false);
-  const [emailError, setEmailError] = useState('');
-  const [emailOk, setEmailOk] = useState(false);
-
+  // (troca do próprio e-mail fica no ChangeEmailCard — senha atual + confirmação)
   const [pwdForm, setPwdForm] = useState({ current: '', next: '', confirm: '' });
   const [pwdSaving, setPwdSaving] = useState(false);
   const [pwdError, setPwdError] = useState('');
   const [pwdOk, setPwdOk] = useState(false);
 
-  const emailValid =
-    emailForm.email.trim() !== '' &&
-    emailForm.confirm.trim() !== '' &&
-    emailForm.email === emailForm.confirm &&
-    emailForm.email !== user?.email;
-
   const pwdValid =
     pwdForm.current.trim() !== '' &&
     pwdForm.next.trim().length >= 6 &&
     pwdForm.next === pwdForm.confirm;
-
-  const handleSaveEmail = async () => {
-    if (!emailValid) return;
-    setEmailError('');
-    setEmailSaving(true);
-    try {
-      await updateUser({ email: emailForm.email.trim() });
-      setEmailOk(true);
-      setEmailForm(f => ({ ...f, confirm: '' }));
-      setTimeout(() => setEmailOk(false), 2500);
-    } catch (err) {
-      setEmailError(err instanceof Error ? err.message : 'Erro ao atualizar e-mail.');
-    } finally {
-      setEmailSaving(false);
-    }
-  };
 
   const handleSavePassword = async () => {
     if (!pwdValid) return;
@@ -268,43 +242,7 @@ function AccountTab() {
   return (
     <div className="space-y-6">
       {/* ── Meu e-mail ─────────────────────────────────────────────────────── */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Alterar meu e-mail</CardTitle>
-          <CardDescription>E-mail atual: <span className="font-medium text-foreground">{user?.email}</span></CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="space-y-1">
-            <Label>Novo e-mail *</Label>
-            <Input
-              type="email"
-              placeholder="novo@email.com"
-              value={emailForm.email}
-              onChange={e => setEmailForm(f => ({ ...f, email: e.target.value }))}
-            />
-          </div>
-          <div className="space-y-1">
-            <Label>Confirmar novo e-mail *</Label>
-            <Input
-              type="email"
-              placeholder="novo@email.com"
-              value={emailForm.confirm}
-              onChange={e => setEmailForm(f => ({ ...f, confirm: e.target.value }))}
-            />
-            {emailForm.confirm && emailForm.email !== emailForm.confirm && (
-              <p className="text-xs text-destructive">Os e-mails não coincidem.</p>
-            )}
-          </div>
-          {emailError && <p className="text-sm text-destructive">{emailError}</p>}
-          <Button onClick={handleSaveEmail} disabled={!emailValid || emailSaving} className="gap-2">
-            {emailSaving
-              ? <><Loader2 className="h-4 w-4 animate-spin" />Salvando...</>
-              : emailOk
-              ? <><CheckCircle className="h-4 w-4" />Salvo!</>
-              : 'Salvar e-mail'}
-          </Button>
-        </CardContent>
-      </Card>
+      <ChangeEmailCard />
 
       {/* ── Minha senha ────────────────────────────────────────────────────── */}
       <Card>
