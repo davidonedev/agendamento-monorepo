@@ -1,9 +1,11 @@
 package com.agendepro.superadmin;
 
 import com.agendepro.common.ApiResponse;
+import com.agendepro.common.ClientIp;
 import com.agendepro.tenant.TenantDtos;
 import com.agendepro.tenant.TenantPlan;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -23,6 +25,12 @@ import static com.agendepro.superadmin.SuperAdminDtos.*;
 public class SuperAdminController {
 
     private final SuperAdminService superAdminService;
+
+    @PostMapping("/tenants/{id}/impersonate")
+    public ResponseEntity<ApiResponse<ImpersonateResponse>> impersonate(
+            @PathVariable UUID id, HttpServletRequest http) {
+        return ResponseEntity.ok(ApiResponse.ok(superAdminService.impersonate(id, ClientIp.of(http))));
+    }
 
     @GetMapping("/metrics")
     public ResponseEntity<ApiResponse<PlatformMetricsResponse>> metrics() {

@@ -41,10 +41,20 @@ public class TestFixtures {
                 .email("owner-" + unique + "@example.com").status(TenantStatus.ACTIVE).plan(plan).build());
     }
 
+    public Tenant saveTenant(Tenant tenant) {
+        return tenantRepository.save(tenant);
+    }
+
     public User admin(Tenant tenant, String email, String rawPassword) {
         return userRepository.save(User.builder()
                 .name("Admin").email(email).passwordHash(passwordEncoder.encode(rawPassword))
                 .role(UserRole.TENANT_ADMIN).tenantId(tenant.getId()).build());
+    }
+
+    public User superAdmin(String email, String rawPassword) {
+        return userRepository.save(User.builder()
+                .name("Super").email(email).passwordHash(passwordEncoder.encode(rawPassword))
+                .role(UserRole.SUPER_ADMIN).build());
     }
 
     public User professionalUser(Tenant tenant, Professional professional, String email, String rawPassword) {

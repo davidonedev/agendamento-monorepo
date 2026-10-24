@@ -8,6 +8,7 @@ import java.util.UUID;
 public interface TenantRepository extends JpaRepository<Tenant, UUID> {
     Optional<Tenant> findBySlug(String slug);
     Optional<Tenant> findByEmail(String email);
+    Optional<Tenant> findFirstByNameIgnoreCase(String name);
     boolean existsBySlug(String slug);
     long countByStatus(TenantStatus status);
 }

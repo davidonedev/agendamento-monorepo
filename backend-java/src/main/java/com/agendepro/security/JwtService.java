@@ -20,7 +20,7 @@ import java.util.regex.Pattern;
 /**
  * Geração e validação de JWT — porta de jsonwebtoken (jwt.sign/jwt.verify) usado em
  * auth.middleware.ts e auth.controller.ts. Mesmas claims: sub, role, tenantId,
- * professionalId.
+ * professionalId — mais "tv" (token version), usada para revogar sessões.
  */
 @Component
 public class JwtService {
@@ -45,6 +45,7 @@ public class JwtService {
         var builder = Jwts.builder()
                 .subject(user.userId().toString())
                 .claim("role", user.role().getValue())
+                .claim("tv", user.tokenVersion())
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(now.plus(expiresIn)))
                 .signWith(key, Jwts.SIG.HS256);
@@ -70,7 +71,10 @@ public class JwtService {
             UUID professionalId = claims.get("professionalId", String.class) != null
                     ? UUID.fromString(claims.get("professionalId", String.class)) : null;
 
-            return new AuthenticatedUser(userId, role, tenantId, professionalId);
+            // Tokens emitidos antes da claim "tv" existir contam como versão 0
+            Integer tokenVersion = claims.get("tv", Integer.class);
+
+            return new AuthenticatedUser(userId, role, tenantId, professionalId, tokenVersion == null ? 0 : tokenVersion);
         } catch (JwtException | IllegalArgumentException ex) {
             throw new InvalidTokenException("Token inválido ou expirado", ex);
         }

@@ -3,6 +3,10 @@ package com.agendepro.superadmin;
 import com.agendepro.appointment.Appointment;
 import com.agendepro.appointment.AppointmentRepository;
 import com.agendepro.appointment.AppointmentStatus;
+import com.agendepro.audit.AuditService;
+import com.agendepro.security.AuthenticatedUser;
+import com.agendepro.security.JwtService;
+import com.agendepro.security.SecurityUtils;
 import com.agendepro.catalog.ServiceOffering;
 import com.agendepro.catalog.ServiceOfferingRepository;
 import com.agendepro.client.ClientRepository;
@@ -37,6 +41,8 @@ public class SuperAdminService {
     private final ServiceOfferingRepository serviceOfferingRepository;
     private final ClientRepository clientRepository;
     private final PlanConfigRepository planConfigRepository;
+    private final AuditService auditService;
+    private final JwtService jwtService;
 
     // ─── Tenants ────────────────────────────────────────────────────────────────
 
@@ -170,8 +176,11 @@ public class SuperAdminService {
         });
 
         User user = userRepository.findById(id).orElseThrow(() -> AppException.notFound("Usuário não encontrado"));
+        String oldEmail = user.getEmail();
         user.setEmail(request.email());
         userRepository.save(user);
+        auditService.record(AuditService.CREDENTIALS_CHANGED_BY_SUPER, SecurityUtils.currentUser().userId(), user.getId(),
+                user.getTenantId(), null, Map.of("field", "email", "oldEmail", oldEmail, "newEmail", user.getEmail()));
 
         Tenant t = user.getTenantId() == null ? null : tenantRepository.findById(user.getTenantId()).orElse(null);
         return new UserListItem(user.getId(), user.getName(), user.getEmail(), user.getRole(), user.getTenantId(),
@@ -182,7 +191,10 @@ public class SuperAdminService {
     public void forceChangePassword(UUID id, ForcePasswordRequest request) {
         User user = userRepository.findById(id).orElseThrow(() -> AppException.notFound("Usuário não encontrado"));
         user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
+        user.bumpTokenVersion(); // senha trocada pelo Superadmin derruba as sessões do usuário
         userRepository.save(user);
+        auditService.record(AuditService.CREDENTIALS_CHANGED_BY_SUPER, SecurityUtils.currentUser().userId(), user.getId(),
+                user.getTenantId(), null, Map.of("field", "password"));
     }
 
     // ─── Planos ─────────────────────────────────────────────────────────────────
@@ -224,6 +236,35 @@ public class SuperAdminService {
         if (request.features() != null) config.setFeatures(request.features().toArray(new String[0]));
 
         return PlanConfigResponse.from(planConfigRepository.save(config));
+    }
+
+    // ─── Impersonation ──────────────────────────────────────────────────────────
+
+    /** Gera um JWT para o tenant_admin do tenant indicado, permitindo que o super admin acesse o painel sem trocar credenciais. */
+    @Transactional(readOnly = true)
+    public ImpersonateResponse impersonate(UUID tenantId, String actorIp) {
+        Tenant tenant = tenantRepository.findById(tenantId)
+                .orElseThrow(() -> AppException.notFound("Tenant não encontrado"));
+
+        User admin = userRepository.findFirstByTenantIdAndRole(tenantId, UserRole.TENANT_ADMIN)
+                .orElseThrow(() -> AppException.notFound("Tenant não possui administrador cadastrado"));
+
+        AuthenticatedUser principal = new AuthenticatedUser(
+                admin.getId(), admin.getRole(), admin.getTenantId(),
+                admin.getProfessionalId(), admin.getTokenVersion());
+        String token = jwtService.generateToken(principal);
+
+        auditService.record(AuditService.SUPER_ADMIN_ACCESSED_TENANT,
+                SecurityUtils.currentUser().userId(), admin.getId(), tenantId, actorIp,
+                Map.of("tenantName", tenant.getName()));
+
+        com.agendepro.user.AuthDtos.TenantSummary tenantSummary = new com.agendepro.user.AuthDtos.TenantSummary(
+                tenant.getId(), tenant.getSlug(), tenant.getName(), tenant.getStatus(), tenant.getPlan());
+
+        return new ImpersonateResponse(token,
+                new com.agendepro.user.AuthDtos.UserSummary(
+                        admin.getId(), admin.getName(), admin.getEmail(), admin.getRole(),
+                        admin.getTenantId(), admin.getProfessionalId(), tenantSummary));
     }
 
     // ─── Métricas da plataforma ───────────────────────────────────────────────────

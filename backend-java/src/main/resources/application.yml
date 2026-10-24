@@ -5,6 +5,10 @@ spring:
   application:
     name: agendepro-backend
 
+  config:
+    # Carrega o .env da pasta de onde a aplicação é executada (backend-java), se existir
+    import: optional:file:.env[.properties]
+
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/agendepro_java}
     username: ${DB_USERNAME:postgres}
@@ -24,6 +28,7 @@ spring:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
+    validate-on-migrate: false
 
   mail:
     host: ${SMTP_HOST:smtp.gmail.com}
@@ -73,6 +78,20 @@ app:
     auth-refill-minutes: 15
     api-capacity: 200
     api-refill-minutes: 1
+    # Limites extras por IP em rotas sensíveis (além do limite geral de /api/auth)
+    login-capacity: 10              # por 15 min
+    forgot-password-capacity: 5     # por 15 min
+    reset-password-capacity: 10     # por 15 min (também vale para confirmar troca de e-mail)
+    email-change-capacity: 5        # por 15 min
+    access-help-capacity: 5         # por 60 min
+    # Falhas de login por e-mail (independente do IP)
+    login-failures-per-email: 5
+    login-failures-window-minutes: 15
+  password-reset:
+    ttl-minutes: ${PASSWORD_RESET_TTL_MINUTES:30}
+    max-per-hour: 3                 # pedidos de reset por conta/hora (excedente é ignorado em silêncio)
+  email-change:
+    ttl-minutes: ${EMAIL_CHANGE_TTL_MINUTES:60}
 
 springdoc:
   swagger-ui:

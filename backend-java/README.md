@@ -1,104 +1,165 @@
-# AgendePro Backend — Java / Spring Boot
+# AgendePro — Backend (Java / Spring Boot)
 
-Reescrita em Java/Spring Boot do backend original (`../backend`, Node.js + Express +
-Prisma), feita como projeto de aprendizado/portfólio. O **frontend não foi alterado** —
-este backend expõe exatamente o mesmo contrato de API (`/api/**`, envelope
-`{success, data}` / `{success, error, code, details}`, porta `3333`), então basta
-apontar `frontend/.env` (`VITE_API_URL`) para aqui.
+**Português** | [English](#english)
 
-## Stack
+API do AgendePro em Java 21 + Spring Boot 3.3, rodando na porta **3333**.
 
-- **Java 21** + **Spring Boot 3.3**
-- **Spring Data JPA** (Hibernate) + **PostgreSQL**
-- **Flyway** — migrations versionadas (`src/main/resources/db/migration`)
-- **Spring Security** (stateless) + **JJWT** — autenticação JWT, mesmas claims do backend Node
-- **Bean Validation** (Jakarta) — porta das validações Zod
-- **Lombok** — reduz boilerplate de getters/setters/construtores
-- **Bucket4j** — rate limiting (porta do express-rate-limit)
-- **spring-boot-starter-mail** + **Thymeleaf** — e-mail de verificação
-- **springdoc-openapi** — Swagger UI em `/swagger-ui.html`
-- **spring-dotenv** — lê `.env` localmente, igual ao backend Node
-- **Testcontainers** — testes de integração com Postgres real (sem mocks)
+## Requisitos
 
-## Diferenças deliberadas em relação ao backend Node
+- Java 21
+- Docker (para o PostgreSQL)
 
-- **Banco separado** (`agendepro_java`) — não compartilha dados com o backend Node em produção.
-- **MapStruct foi removido** do plano original em favor de mapeamento manual
-  (métodos estáticos `from(...)` nos DTOs) — mais simples de revisar/depurar num
-  projeto de aprendizado, sem processador de anotações adicional.
-- **Enums** (`TenantStatus`, `TenantPlan`, `UserRole`, `AppointmentStatus`) são
-  `VARCHAR` + `CHECK constraint` no banco (não enum nativo do Postgres), convertidos
-  via `AttributeConverter` — mesmos valores em snake_case (`tenant_admin`, `no_show`...)
-  tanto no JSON quanto no banco, para o frontend não perceber diferença.
-- **`passwordHash` nunca é serializado** nas respostas aninhadas de cliente
-  (ex: dentro de um agendamento) — o Node original inclui o registro `Client`
-  inteiro via Prisma `include`, o que vazaria o hash; aqui isso foi corrigido.
-- **Upsert de cliente por (tenantId, email)** no fluxo de agendamento usa
-  check-then-act protegido pela constraint única do banco, em vez do upsert
-  atômico do Prisma — sob concorrência extrema, o perdedor da corrida recebe
-  `409 DUPLICATE_ENTRY` em vez de mesclar silenciosamente.
-- `multer` existia no `package.json` do Node mas não havia nenhum endpoint de
-  upload real — não foi portado (apenas o `/uploads/**` estático, por paridade).
-
-## Como rodar
-
-### 1. Banco de dados
+## 1. Banco de dados
 
 ```bash
 docker run --name agendepro-java-pg -e POSTGRES_PASSWORD=root -e POSTGRES_DB=agendepro_java -p 5432:5432 -d postgres:16-alpine
 ```
 
-Ou aponte `DB_URL`/`DB_USERNAME`/`DB_PASSWORD` (em `.env`) para qualquer Postgres já
-existente — só use um banco vazio dedicado (`agendepro_java`), não o mesmo do backend Node.
+- Se a porta 5432 estiver ocupada, use `-p 5433:5432` e ajuste `DB_URL` no `.env` para `jdbc:postgresql://localhost:5433/agendepro_java`.
+- Nas próximas vezes, basta: `docker start agendepro-java-pg`
 
-### 2. Configuração
-
-```bash
-cp .env.example .env
-# edite JWT_SECRET, credenciais de banco, SMTP (opcional) etc.
-```
-
-### 3. Subir a aplicação
+## 2. Configuração
 
 ```bash
-./mvnw spring-boot:run
+cp .env.example .env        # PowerShell: Copy-Item .env.example .env
 ```
 
-Não é necessário ter o Maven instalado — o Maven Wrapper (`mvnw`/`mvnw.cmd`) baixa
-tudo sozinho no primeiro uso. O Flyway aplica as migrations automaticamente ao
-iniciar, e o seed de dados de demonstração roda se `SEED_ENABLED=true` (padrão) e o
-banco estiver vazio.
+| Variável | Para que serve | Padrão |
+|---|---|---|
+| `DB_URL` | URL JDBC do banco | `jdbc:postgresql://localhost:5432/agendepro_java` |
+| `DB_USERNAME` / `DB_PASSWORD` | Usuário e senha do banco | `postgres` / `root` |
+| `PORT` | Porta da API | `3333` |
+| `JWT_SECRET` | Segredo dos tokens (troque fora do ambiente local) | placeholder |
+| `CORS_ORIGIN` | Origens do frontend permitidas | `http://localhost:5173,http://localhost:3000` |
+| `SEED_ENABLED` | Cria dados de demonstração no primeiro start (banco vazio) | `true` |
 
-### 4. Testar
+`SMTP_*` e `APP_URL` são opcionais. Sem SMTP configurado, o link de verificação de e-mail aparece apenas no console.
 
-- Health check: `GET http://localhost:3333/health`
-- Swagger UI: `http://localhost:3333/swagger-ui.html`
-- Login de exemplo: `admin@barber-kings.com` / `admin123` (veja mais contas no log do seed)
+## 3. Rodar
 
 ```bash
-./mvnw test
+./mvnw spring-boot:run      # Windows: .\mvnw.cmd spring-boot:run
 ```
 
-## Estrutura (por domínio/feature)
+Não precisa instalar o Maven. Na primeira vez baixa as dependências (demora). As migrations do banco rodam sozinhas.
 
-```
-com.agendepro
-├── common/        envelope de resposta, exceções, handler global
-├── security/       JWT, filtros, SecurityConfig
-├── ratelimit/       Bucket4j
-├── tenant/          Tenant, dashboard, configurações, receita (admin)
-├── user/            User, autenticação (/api/auth/**)
-├── professional/     Profissionais + auto-atendimento (/api/professional/**)
-├── catalog/         Serviços, categorias de produto/serviço
-├── client/           Clientes (área admin)
-├── appointment/     Agendamentos, conflito de horário, slots
-├── blockedslot/      Horários bloqueados
-├── product/          Produtos (estoque)
-├── reminder/         Clientes ausentes
-├── publicapi/        Portal público (/api/public/**, sem auth)
-├── superadmin/        Painel super admin (/api/super/**)
-├── notification/      E-mail (Thymeleaf) e WhatsApp (Evolution API)
-└── config/            Seed de dados, recursos estáticos, OpenAPI
+**Windows — caminho com acento ou espaço** (ex.: `Área de Trabalho`): se aparecer `Could not find or load main class`, gere o jar e rode assim:
+
+```powershell
+.\mvnw.cmd -DskipTests package
+java -jar target\agendepro-backend.jar
 ```
 
-Cada domínio segue `Controller → Service → Repository`, mesmo para CRUDs simples.
+A mensagem `'EM' não é reconhecido como um comando interno` pode ser ignorada.
+
+## 4. Conferir
+
+- Saúde: http://localhost:3333/health → `{"status":"ok", ...}`
+- Documentação interativa da API (Swagger): http://localhost:3333/swagger-ui.html
+
+## Logins de demonstração (somente desenvolvimento)
+
+| Perfil | E-mail | Senha |
+|---|---|---|
+| Super admin | `super@agendepro.com` | `super123` |
+| Admin da barbearia | `admin@barber-kings.com` | `admin123` |
+| Profissional | `carlos@barber-kings.com` | `prof123` |
+
+## Testes
+
+```bash
+./mvnw test                 # exige o Docker em execução (Testcontainers)
+```
+
+## Problemas comuns
+
+- `error during connect ... dockerDesktopLinuxEngine` → abra o Docker Desktop.
+- `Connection refused` ou `password authentication failed` → o container do banco não está rodando, ou porta/senha diferem do `.env`.
+- `Port 3333 was already in use` → há outra aplicação usando a porta 3333.
+- PostgreSQL instalado no Windows já ocupa a porta 5432 → suba o container com `-p 5433:5432` e use `DB_URL=jdbc:postgresql://localhost:5433/agendepro_java` no `.env`.
+
+Frontend: [../frontend](../frontend)
+
+---
+
+<a id="english"></a>
+
+[Português](#agendepro--backend-java--spring-boot) | **English**
+
+AgendePro API built with Java 21 + Spring Boot 3.3, running on port **3333**.
+
+## Requirements
+
+- Java 21
+- Docker (for PostgreSQL)
+
+## 1. Database
+
+```bash
+docker run --name agendepro-java-pg -e POSTGRES_PASSWORD=root -e POSTGRES_DB=agendepro_java -p 5432:5432 -d postgres:16-alpine
+```
+
+- If port 5432 is already in use, use `-p 5433:5432` and set `DB_URL` in `.env` to `jdbc:postgresql://localhost:5433/agendepro_java`.
+- Next time, just run: `docker start agendepro-java-pg`
+
+## 2. Configuration
+
+```bash
+cp .env.example .env        # PowerShell: Copy-Item .env.example .env
+```
+
+| Variable | Purpose | Default |
+|---|---|---|
+| `DB_URL` | Database JDBC URL | `jdbc:postgresql://localhost:5432/agendepro_java` |
+| `DB_USERNAME` / `DB_PASSWORD` | Database user and password | `postgres` / `root` |
+| `PORT` | API port | `3333` |
+| `JWT_SECRET` | Token signing secret (change it outside local development) | placeholder |
+| `CORS_ORIGIN` | Allowed frontend origins | `http://localhost:5173,http://localhost:3000` |
+| `SEED_ENABLED` | Creates demo data on first start (empty database) | `true` |
+
+`SMTP_*` and `APP_URL` are optional. Without SMTP configured, the e-mail verification link is only printed to the console.
+
+## 3. Run
+
+```bash
+./mvnw spring-boot:run      # Windows: .\mvnw.cmd spring-boot:run
+```
+
+No Maven installation needed. The first run downloads dependencies (it takes a while). Database migrations run automatically.
+
+**Windows — path with accents or spaces** (e.g. `Área de Trabalho`): if you get `Could not find or load main class`, build the jar and run it instead:
+
+```powershell
+.\mvnw.cmd -DskipTests package
+java -jar target\agendepro-backend.jar
+```
+
+The message `'EM' não é reconhecido como um comando interno` can be ignored.
+
+## 4. Check
+
+- Health: http://localhost:3333/health → `{"status":"ok", ...}`
+- Interactive API documentation (Swagger): http://localhost:3333/swagger-ui.html
+
+## Demo logins (development only)
+
+| Role | E-mail | Password |
+|---|---|---|
+| Super admin | `super@agendepro.com` | `super123` |
+| Barbershop admin | `admin@barber-kings.com` | `admin123` |
+| Professional | `carlos@barber-kings.com` | `prof123` |
+
+## Tests
+
+```bash
+./mvnw test                 # requires Docker running (Testcontainers)
+```
+
+## Common issues
+
+- `error during connect ... dockerDesktopLinuxEngine` → start Docker Desktop.
+- `Connection refused` or `password authentication failed` → the database container is not running, or the port/password differs from `.env`.
+- `Port 3333 was already in use` → another application is using port 3333.
+- A PostgreSQL installed on Windows already uses port 5432 → run the container with `-p 5433:5432` and set `DB_URL=jdbc:postgresql://localhost:5433/agendepro_java` in `.env`.
+
+Frontend: [../frontend](../frontend)

@@ -1,5 +1,5 @@
 @ECHO OFF
-@REM Apache Maven Wrapper startup script (simplified) — delegates all download/bootstrap
+@REM Apache Maven Wrapper startup script (simplified) - delegates all download/bootstrap
 @REM logic to org.apache.maven.wrapper.MavenWrapperMain, packaged in
 @REM .mvn/wrapper/maven-wrapper.jar. That class reads .mvn/wrapper/maven-wrapper.properties,
 @REM downloads the Maven distribution referenced there on first run (cached afterwards
@@ -23,6 +23,13 @@ IF "%JAVA_HOME%"=="" (
   SET JAVA_EXE=%JAVA_HOME%\bin\java.exe
 )
 
-"%JAVA_EXE%" -classpath "%WRAPPER_JAR%" "-Dmaven.multiModuleProjectDirectory=%MAVEN_PROJECTBASEDIR%" org.apache.maven.wrapper.MavenWrapperMain %*
+@REM JVM options from .mvn\jvm.config (e.g. -Dfile.encoding=COMPAT, needed when the
+@REM project path has non-ASCII characters like "Area de Trabalho" with an accent)
+SET MAVEN_JVM_CONFIG=
+IF EXIST "%MAVEN_PROJECTBASEDIR%\.mvn\jvm.config" (
+  FOR /F "usebackq delims=" %%a IN ("%MAVEN_PROJECTBASEDIR%\.mvn\jvm.config") DO SET MAVEN_JVM_CONFIG=%%a
+)
+
+"%JAVA_EXE%" %MAVEN_JVM_CONFIG% %MAVEN_OPTS% -classpath "%WRAPPER_JAR%" "-Dmaven.multiModuleProjectDirectory=%MAVEN_PROJECTBASEDIR%" org.apache.maven.wrapper.MavenWrapperMain %*
 
 ENDLOCAL

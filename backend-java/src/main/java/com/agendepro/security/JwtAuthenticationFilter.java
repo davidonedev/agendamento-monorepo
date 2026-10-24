@@ -4,6 +4,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import com.agendepro.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -20,6 +21,7 @@ import java.util.List;
  * bloqueia a requisição sozinho — isso fica a cargo do SecurityConfig + RestAuthEntryPoint,
  * para que rotas públicas com um header Authorization inválido continuem funcionando
  * (mesmo comportamento do Express, onde o middleware só roda nas rotas protegidas).
+ * Também rejeita tokens cuja versão ("tv") não bate mais com {@code users.token_version}.
  */
 @Component
 @RequiredArgsConstructor
@@ -30,6 +32,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     public static final String INVALID_TOKEN_ATTRIBUTE = "com.agendepro.security.INVALID_TOKEN";
 
     private final JwtService jwtService;
+    private final UserRepository userRepository;
 
     @Override
     protected void doFilterInternal(
@@ -43,6 +46,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String token = authHeader.substring(7);
             try {
                 AuthenticatedUser user = jwtService.parseToken(token);
+                // Sessão revogada (senha redefinida, credenciais trocadas) ou usuário removido
+                Integer currentVersion = userRepository.findTokenVersionById(user.userId()).orElse(null);
+                if (currentVersion == null || currentVersion != user.tokenVersion()) {
+                    throw new JwtService.InvalidTokenException("Sessão revogada", null);
+                }
                 var authorities = List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority(user.role().authority()));
                 var authentication = new UsernamePasswordAuthenticationToken(user, null, authorities);
                 SecurityContextHolder.getContext().setAuthentication(authentication);

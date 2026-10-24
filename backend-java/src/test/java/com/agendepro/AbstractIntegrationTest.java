@@ -1,6 +1,8 @@
 package com.agendepro;
 
+import com.agendepro.notification.EmailService;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -26,6 +28,10 @@ import org.testcontainers.containers.PostgreSQLContainer;
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 public abstract class AbstractIntegrationTest {
+
+    /** Nenhum e-mail real nos testes; os testes de recuperação de conta capturam os links via ArgumentCaptor. */
+    @MockBean
+    protected EmailService emailService;
 
     static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine")
             .withDatabaseName("agendepro_test")

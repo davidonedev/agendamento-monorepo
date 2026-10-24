@@ -134,4 +134,8 @@ public final class SuperAdminDtos {
     public record PlatformMetricsResponse(Totals totals, TenantsByStatus tenantsByStatus,
                                            Map<String, Long> tenantsByPlan, RevenueSummary revenue) {
     }
+
+    /** Resposta do endpoint de impersonation — token JWT para o tenant_admin + dados do usuário. */
+    public record ImpersonateResponse(String token, com.agendepro.user.AuthDtos.UserSummary user) {
+    }
 }

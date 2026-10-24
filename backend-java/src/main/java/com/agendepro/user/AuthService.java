@@ -24,23 +24,39 @@ public class AuthService {
     private final TenantRepository tenantRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final LoginAttemptLimiter loginAttemptLimiter;
 
+    /** Hash bcrypt fictício: e-mail inexistente também paga o custo do bcrypt (sem diferença de tempo). */
+    private String dummyHash;
+
+    /**
+     * Login único para super_admin, tenant_admin e professional. Qualquer falha
+     * (e-mail inexistente, senha errada, tenant suspenso) devolve a mesma mensagem.
+     */
     @Transactional(readOnly = true)
     public LoginResponse login(LoginRequest request) {
-        User user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> AppException.unauthorized("E-mail ou senha inválidos", "INVALID_CREDENTIALS"));
+        if (loginAttemptLimiter.isBlocked(request.email())) {
+            throw new AppException("Muitas tentativas. Tente novamente em 15 minutos.", 429, "TOO_MANY_ATTEMPTS");
+        }
 
-        if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
+        User user = userRepository.findByEmail(request.email()).orElse(null);
+        String hash = user != null ? user.getPasswordHash() : dummyHash();
+        boolean passwordOk = passwordEncoder.matches(request.password(), hash);
+
+        Tenant tenant = user != null && user.getTenantId() != null
+                ? tenantRepository.findById(user.getTenantId()).orElse(null) : null;
+
+        // Funcionário e dono só entram com o tenant ativo (trial conta como ativo)
+        boolean tenantBlocked = tenant != null && tenant.getStatus() == TenantStatus.SUSPENDED;
+
+        if (user == null || !passwordOk || tenantBlocked) {
+            loginAttemptLimiter.recordFailure(request.email());
             throw AppException.unauthorized("E-mail ou senha inválidos", "INVALID_CREDENTIALS");
         }
+        loginAttemptLimiter.reset(request.email());
 
-        Tenant tenant = user.getTenantId() != null ? tenantRepository.findById(user.getTenantId()).orElse(null) : null;
-
-        if (tenant != null && tenant.getStatus() == TenantStatus.SUSPENDED) {
-            throw new AppException("Conta suspensa. Entre em contato com o suporte.", 403, "TENANT_SUSPENDED");
-        }
-
-        AuthenticatedUser principal = new AuthenticatedUser(user.getId(), user.getRole(), user.getTenantId(), user.getProfessionalId());
+        AuthenticatedUser principal = new AuthenticatedUser(user.getId(), user.getRole(), user.getTenantId(),
+                user.getProfessionalId(), user.getTokenVersion());
         String token = jwtService.generateToken(principal);
 
         TenantSummary tenantSummary = tenant == null ? null
@@ -77,13 +93,11 @@ public class AuthService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> AppException.notFound("Usuário não encontrado"));
 
-        if (request.email() != null) {
-            userRepository.findByEmail(request.email()).ifPresent(existing -> {
-                if (!existing.getId().equals(userId)) {
-                    throw new AppException("E-mail já está em uso", 400, "EMAIL_IN_USE");
-                }
-            });
-            user.setEmail(request.email());
+        // A troca de e-mail exige senha atual + confirmação pelo novo endereço (POST /api/auth/email-change)
+        if (request.email() != null && !request.email().equalsIgnoreCase(user.getEmail())) {
+            throw AppException.badRequest(
+                    "Para alterar o e-mail, use a opção \"Alterar e-mail\" (requer senha atual e confirmação).",
+                    "USE_EMAIL_CHANGE_FLOW");
         }
         if (request.name() != null) {
             user.setName(request.name());
@@ -105,5 +119,12 @@ public class AuthService {
 
         user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
         userRepository.save(user);
+    }
+
+    private String dummyHash() {
+        if (dummyHash == null) {
+            dummyHash = passwordEncoder.encode(UUID.randomUUID().toString());
+        }
+        return dummyHash;
     }
 }

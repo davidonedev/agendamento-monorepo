@@ -2,6 +2,8 @@ package com.agendepro.professional;
 
 import com.agendepro.appointment.Appointment;
 import com.agendepro.appointment.AppointmentRepository;
+import com.agendepro.audit.AuditService;
+import com.agendepro.security.SecurityUtils;
 import com.agendepro.catalog.ServiceOffering;
 import com.agendepro.catalog.ServiceOfferingDtos;
 import com.agendepro.catalog.ServiceOfferingRepository;
@@ -38,6 +40,7 @@ public class ProfessionalService {
     private final PasswordEncoder passwordEncoder;
     private final AppointmentRepository appointmentRepository;
     private final ClientRepository clientRepository;
+    private final AuditService auditService;
 
     @Transactional(readOnly = true)
     public List<ProfessionalResponse> list(UUID tenantId) {
@@ -189,13 +192,34 @@ public class ProfessionalService {
         return toResponse(professional, null);
     }
 
+    /**
+     * Cria ou atualiza o acesso do profissional. Só mexe no usuário já vinculado a esse
+     * profissional (ou num usuário profissional órfão do MESMO tenant com esse e-mail);
+     * um e-mail de qualquer outra conta é rejeitado — nunca sobrescreve senha alheia.
+     */
     private void upsertPlatformUser(String email, String password, UUID professionalId, UUID tenantId, String name) {
         String passwordHash = passwordEncoder.encode(password);
-        User user = userRepository.findByEmail(email).orElse(null);
+        User user = userRepository.findFirstByProfessionalIdAndTenantId(professionalId, tenantId).orElse(null);
+        User byEmail = userRepository.findByEmail(email).orElse(null);
+
+        if (byEmail != null && (user == null || !byEmail.getId().equals(user.getId()))) {
+            boolean orphanOfSameTenant = user == null
+                    && byEmail.getRole() == UserRole.PROFESSIONAL
+                    && tenantId.equals(byEmail.getTenantId())
+                    && byEmail.getProfessionalId() == null;
+            if (!orphanOfSameTenant) {
+                throw new AppException("E-mail já está em uso", 400, "EMAIL_IN_USE");
+            }
+            user = byEmail;
+        }
+
         if (user != null) {
+            user.setEmail(email);
             user.setPasswordHash(passwordHash);
             user.setProfessionalId(professionalId);
-            user.setTenantId(tenantId);
+            user.bumpTokenVersion(); // credenciais trocadas pelo tenant derrubam as sessões do funcionário
+            auditService.record(AuditService.CREDENTIALS_CHANGED_BY_TENANT, currentUserIdOrNull(), user.getId(), tenantId,
+                    null, Map.of("professionalId", professionalId.toString()));
         } else {
             user = User.builder()
                     .name(name)
@@ -207,6 +231,14 @@ public class ProfessionalService {
                     .build();
         }
         userRepository.save(user);
+    }
+
+    private static UUID currentUserIdOrNull() {
+        try {
+            return SecurityUtils.currentUser().userId();
+        } catch (AppException ex) {
+            return null;
+        }
     }
 
     public List<ServiceLinkSummary> buildServiceLinks(UUID professionalId) {

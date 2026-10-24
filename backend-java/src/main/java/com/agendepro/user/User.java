@@ -43,6 +43,11 @@ public class User {
     @Column(name = "professional_id")
     private UUID professionalId;
 
+    /** Incrementado para invalidar todos os JWTs já emitidos (reset de senha, troca de credenciais). */
+    @Column(name = "token_version", nullable = false)
+    @Builder.Default
+    private int tokenVersion = 0;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     @Builder.Default
     private Instant createdAt = Instant.now();
@@ -50,6 +55,10 @@ public class User {
     @Column(name = "updated_at", nullable = false)
     @Builder.Default
     private Instant updatedAt = Instant.now();
+
+    public void bumpTokenVersion() {
+        tokenVersion++;
+    }
 
     @PrePersist
     void prePersist() {
