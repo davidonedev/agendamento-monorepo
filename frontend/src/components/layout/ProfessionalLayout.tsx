@@ -25,7 +25,7 @@ export default function ProfessionalLayout() {
   const navigate                                                = useNavigate();
   const [open, setOpen]                                         = useState(false);
 
-  const { notifications, unreadCount, markAllRead, activeToasts, dismissToast } =
+  const { notifications, unreadCount, markAllRead, activeToasts, dismissToast, clearAll } =
     useAppointmentNotifications(appointments, clients, services);
 
   const accentColor           = tenant.adminColor ?? tenant.primaryColor;
@@ -109,6 +109,7 @@ export default function ProfessionalLayout() {
             markAllRead={markAllRead}
             activeToasts={activeToasts}
             dismissToast={dismissToast}
+            clearAll={clearAll}
           />
           <Button variant="ghost" size="icon" onClick={toggle} title={isDark ? 'Modo claro' : 'Modo escuro'}>
             {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}

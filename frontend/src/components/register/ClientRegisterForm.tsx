@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { usePublicTenant } from '@/context/PublicTenantContext';
-import { usePublicClient } from '@/context/PublicClientContext';
 import { registerClientApi, type ClientSessionData } from '@/services/register.service';
 import { ApiError } from '@/lib/api';
 import { maskPhone } from '@/lib/phone';
@@ -62,8 +61,6 @@ function Divider() {
 
 export default function ClientRegisterForm({ onBack, onSuccess, onSwitchToLogin }: ClientRegisterFormProps) {
   const { data: { tenant }, getSlug } = usePublicTenant();
-  const { login } = usePublicClient();
-
   const [form, setForm]     = useState<FormState>(EMPTY);
   const [errors, setErrors] = useState<FormErrors>({});
   const [saving, setSaving] = useState(false);
@@ -106,13 +103,6 @@ export default function ClientRegisterForm({ onBack, onSuccess, onSwitchToLogin 
     } finally {
       setSaving(false);
     }
-  };
-
-  const handleGoogleSuccess = () => {
-    // GoogleSignInButton já chamou login(); buscamos o cliente do contexto via onSuccess
-    // Precisamos propagar para RegisterPage — usamos um resultado sintético via login
-    // O RegisterPage vai ler do contexto após o login do Google
-    onSuccess({ id: '', name: '', email: '' }); // sinaliza sucesso; RegisterPage lê do context
   };
 
   return (

@@ -256,8 +256,6 @@ export default function BookingFlow() {
   };
 
   const btnStyle = { backgroundColor: tenant.primaryColor };
-  const stepOrder: Step[] = ['service', 'professional', 'datetime', 'confirm', 'done'];
-  const stepIdx    = stepOrder.indexOf(step);
   const stepLabels: Record<Step, string> = {
     service:       'Serviços',
     professional:  'Profissional',

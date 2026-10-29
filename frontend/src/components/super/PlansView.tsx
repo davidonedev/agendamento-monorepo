@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   Check, CreditCard, Loader2, Pencil, Users,
-  TrendingUp, Crown, Zap, Star, Plus, Trash2, X,
+  TrendingUp, Crown, Zap, Star, Plus, X,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';

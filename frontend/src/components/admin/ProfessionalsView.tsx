@@ -15,8 +15,8 @@ import { formatCurrency } from '@/lib/utils';
 import type { Professional, Service } from '@/types';
 
 const DAY_NAMES = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-const STATUS_VARIANT = { confirmed: 'info', completed: 'success', cancelled: 'destructive', pending: 'warning' } as const;
-const STATUS_LABEL = { pending: 'Pendente', confirmed: 'Confirmado', completed: 'Concluído', cancelled: 'Cancelado' };
+const STATUS_VARIANT = { confirmed: 'info', completed: 'success', cancelled: 'destructive', pending: 'warning', no_show: 'destructive' } as const;
+const STATUS_LABEL = { pending: 'Pendente', confirmed: 'Confirmado', completed: 'Concluído', cancelled: 'Cancelado', no_show: 'Não compareceu' };
 
 interface ProfFormData {
   name: string;

@@ -8,7 +8,7 @@ import type { Appointment, BlockedSlot, Client, Product, ProductCategory, Servic
 import { useAuth } from './AuthContext';
 
 import { getMyTenantApi, updateTenantSettingsApi } from '../services/tenant.service';
-import { listAppointmentsApi, createAppointmentApi, updateAppointmentStatusApi, deleteAppointmentApi } from '../services/appointments.service';
+import { listAppointmentsApi, createAppointmentApi, updateAppointmentStatusApi } from '../services/appointments.service';
 import { listBlockedSlotsApi, createBlockedSlotApi, deleteBlockedSlotApi } from '../services/blockedSlots.service';
 import { listClientsApi, createClientApi, updateClientApi, deleteClientApi } from '../services/clients.service';
 import { listProfessionalsApi, createProfessionalApi, updateProfessionalApi, deleteProfessionalApi } from '../services/professionals.service';

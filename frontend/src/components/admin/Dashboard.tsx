@@ -8,8 +8,8 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useTenant } from '@/context/TenantContext';
 import { formatCurrency } from '@/lib/utils';
 
-const STATUS_VARIANT = { confirmed: 'info', completed: 'success', cancelled: 'destructive', pending: 'warning' } as const;
-const STATUS_LABEL   = { pending: 'Pendente', confirmed: 'Confirmado', completed: 'Concluído', cancelled: 'Cancelado' };
+const STATUS_VARIANT = { confirmed: 'info', completed: 'success', cancelled: 'destructive', pending: 'warning', no_show: 'destructive' } as const;
+const STATUS_LABEL   = { pending: 'Pendente', confirmed: 'Confirmado', completed: 'Concluído', cancelled: 'Cancelado', no_show: 'Não compareceu' };
 
 export default function Dashboard() {
   const { appointments, clients, professionals, services } = useTenant();

@@ -5,7 +5,7 @@ import type { BlockedSlot } from '../types';
 function normalize(b: Record<string, unknown>): BlockedSlot {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { professional: _p, ...rest } = b;
-  return rest as BlockedSlot;
+  return rest as unknown as BlockedSlot;
 }
 
 export async function listBlockedSlotsApi(filters?: {

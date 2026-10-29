@@ -7,7 +7,6 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { CalendarDays, Clock, User, Scissors, Loader2, CheckCircle, UserCheck } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { formatCurrency } from '@/lib/utils';

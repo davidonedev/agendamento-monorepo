@@ -1,5 +1,5 @@
 import { api } from '../lib/api';
-import type { Tenant, TenantData, PlanConfig, TenantPlan } from '../types';
+import type { Tenant, PlanConfig, TenantPlan } from '../types';
 
 // ─── Métricas ─────────────────────────────────────────────────────────────────
 export interface PlatformMetrics {

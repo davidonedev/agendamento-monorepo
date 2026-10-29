@@ -7,7 +7,7 @@ import type { Appointment } from '../types';
 function normalize(a: Record<string, unknown>): Appointment {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { client: _c, professional: _p, service: _s, ...rest } = a;
-  return rest as Appointment;
+  return rest as unknown as Appointment;
 }
 
 // ─── Admin ────────────────────────────────────────────────────────────────────

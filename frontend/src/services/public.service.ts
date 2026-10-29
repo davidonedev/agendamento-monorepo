@@ -25,7 +25,7 @@ function normalizeProfessional(p: Record<string, unknown>): Professional {
 function normalizeAppointment(a: Record<string, unknown>): Appointment {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { client: _c, professional: _p, service: _s, ...rest } = a;
-  return rest as Appointment;
+  return rest as unknown as Appointment;
 }
 
 // ─── Dados públicos do tenant ─────────────────────────────────────────────────
@@ -139,7 +139,7 @@ export async function registerAndBookApi(
     appointments: raw.appointments.map(a => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { client: _c, professional: _p, service: _s, ...rest } = a;
-      return rest as Appointment;
+      return rest as unknown as Appointment;
     }),
     message: raw.message,
     phone:   raw.phone,
