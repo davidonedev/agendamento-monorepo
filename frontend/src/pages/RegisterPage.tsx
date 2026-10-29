@@ -1,29 +1,24 @@
 import { useState } from 'react';
-import RoleSelector, { type RegisterRole } from '@/components/register/RoleSelector';
 import ClientRegisterForm from '@/components/register/ClientRegisterForm';
-import ProfessionalRegisterForm from '@/components/register/ProfessionalRegisterForm';
 import RegisterSuccess from '@/components/register/RegisterSuccess';
+import ClientLoginDialog from '@/components/register/ClientLoginDialog';
 import { usePublicClient } from '@/context/PublicClientContext';
+import { useNavigate } from 'react-router-dom';
+import { usePublicTenant } from '@/context/PublicTenantContext';
 import type { ClientSessionData } from '@/services/register.service';
 
-type Step = 'role' | 'client-form' | 'professional-form' | 'success';
+type Step = 'client-form' | 'success';
 
 export default function RegisterPage() {
-  const { login, client } = usePublicClient();
+  const { login, client }        = usePublicClient();
+  const { data: { tenant } }     = usePublicTenant();
+  const navigate                 = useNavigate();
 
-  const [step, setStep]         = useState<Step>('role');
-  const [role, setRole]         = useState<RegisterRole | null>(null);
+  const [step, setStep]         = useState<Step>('client-form');
   const [userName, setUserName] = useState('');
+  const [loginOpen, setLoginOpen] = useState(false);
 
-  const handleRoleSelect = (selected: RegisterRole) => {
-    setRole(selected);
-    setStep(selected === 'client' ? 'client-form' : 'professional-form');
-  };
-
-  const handleBack = () => {
-    setStep('role');
-    setRole(null);
-  };
+  const handleBack = () => navigate(`/${tenant.slug}`);
 
   /**
    * Chamado pelo ClientRegisterForm após cadastro (email/senha OU Google).
@@ -33,38 +28,38 @@ export default function RegisterPage() {
    */
   const handleClientSuccess = (result: ClientSessionData) => {
     if (result.id) {
-      // Registro via e-mail/senha — faz login agora
       login(result);
       setUserName(result.name);
     } else {
-      // Google já fez login; lemos o nome do contexto
       setUserName(client?.name ?? '');
     }
     setStep('success');
   };
 
-  const handleProfessionalSuccess = (name: string) => {
-    setUserName(name);
-    setStep('success');
+  const handleLoginClose = () => {
+    setLoginOpen(false);
+    // Se o login foi bem-sucedido, o cliente está no contexto → mostra sucesso
+    if (client) {
+      setUserName(client.name);
+      setStep('success');
+    }
   };
 
   return (
     <div className="py-4">
-      {step === 'role' && (
-        <RoleSelector onSelect={handleRoleSelect} />
-      )}
-
       {step === 'client-form' && (
-        <ClientRegisterForm onBack={handleBack} onSuccess={handleClientSuccess} />
+        <ClientRegisterForm
+          onBack={handleBack}
+          onSuccess={handleClientSuccess}
+          onSwitchToLogin={() => setLoginOpen(true)}
+        />
       )}
 
-      {step === 'professional-form' && (
-        <ProfessionalRegisterForm onBack={handleBack} onSuccess={handleProfessionalSuccess} />
+      {step === 'success' && (
+        <RegisterSuccess role="client" name={userName} />
       )}
 
-      {step === 'success' && role && (
-        <RegisterSuccess role={role} name={userName} />
-      )}
+      <ClientLoginDialog open={loginOpen} onClose={handleLoginClose} />
     </div>
   );
 }

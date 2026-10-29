@@ -1,0 +1,100 @@
+server:
+  port: ${PORT:3333}
+
+spring:
+  application:
+    name: agendepro-backend
+
+  config:
+    # Carrega o .env da pasta de onde a aplicação é executada (backend-java), se existir
+    import: optional:file:.env[.properties]
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/agendepro_java}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:root}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: false
+        jdbc:
+          time_zone: UTC
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: false
+
+  mail:
+    host: ${SMTP_HOST:smtp.gmail.com}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USER:}
+    password: ${SMTP_PASS:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: 5000
+          timeout: 5000
+
+  servlet:
+    multipart:
+      max-file-size: ${MAX_FILE_SIZE_MB:5}MB
+      max-request-size: ${MAX_FILE_SIZE_MB:5}MB
+
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+    cache: false
+
+logging:
+  level:
+    root: INFO
+    com.agendepro: DEBUG
+    org.hibernate.SQL: ${SQL_LOG_LEVEL:WARN}
+
+# ─── Configurações próprias da aplicação (equivalentes ao config/env.ts do backend Node) ───
+app:
+  jwt:
+    secret: ${JWT_SECRET:troque-este-segredo-em-producao-agendepro-java}
+    expires-in: ${JWT_EXPIRES_IN:7d}
+  cors:
+    origins: ${CORS_ORIGIN:http://localhost:5173,http://localhost:3000}
+  upload-dir: ${UPLOAD_DIR:uploads}
+  app-url: ${APP_URL:http://localhost:5173}
+  bcrypt-rounds: ${BCRYPT_ROUNDS:10}
+  mail-from: ${SMTP_FROM:AgendePro <noreply@agendepro.com>}
+  seed:
+    enabled: ${SEED_ENABLED:true}
+  rate-limit:
+    auth-capacity: 20
+    auth-refill-minutes: 15
+    api-capacity: 200
+    api-refill-minutes: 1
+    # Limites extras por IP em rotas sensíveis (além do limite geral de /api/auth)
+    login-capacity: 10              # por 15 min
+    forgot-password-capacity: 5     # por 15 min
+    reset-password-capacity: 10     # por 15 min (também vale para confirmar troca de e-mail)
+    email-change-capacity: 5        # por 15 min
+    access-help-capacity: 5         # por 60 min
+    # Falhas de login por e-mail (independente do IP)
+    login-failures-per-email: 5
+    login-failures-window-minutes: 15
+  password-reset:
+    ttl-minutes: ${PASSWORD_RESET_TTL_MINUTES:30}
+    max-per-hour: 3                 # pedidos de reset por conta/hora (excedente é ignorado em silêncio)
+  email-change:
+    ttl-minutes: ${EMAIL_CHANGE_TTL_MINUTES:60}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useProfessional } from '@/context/ProfessionalContext';
+import { ChangeEmailCard } from '@/components/account/ChangeEmailCard';
 
 const DAY_LABELS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
@@ -154,6 +155,13 @@ export default function ProfSettingsView() {
           ? 'Salvando...'
           : <><Save className="h-4 w-4" /> Salvar disponibilidade</>}
       </Button>
+
+      {/* ── Conta ────────────────────────────────────────────────────────────── */}
+      <div className="pt-4">
+        <h3 className="text-lg font-semibold tracking-tight">Minha conta</h3>
+        <p className="text-muted-foreground text-sm">Dados de acesso à plataforma.</p>
+      </div>
+      <ChangeEmailCard accentColor={accentColor} />
     </div>
   );
 }

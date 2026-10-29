@@ -1,0 +1,24 @@
+#!/bin/sh
+# Apache Maven Wrapper startup script (simplified) - delegates all download/bootstrap
+# logic to org.apache.maven.wrapper.MavenWrapperMain, packaged in
+# .mvn/wrapper/maven-wrapper.jar. That class reads .mvn/wrapper/maven-wrapper.properties,
+# downloads the Maven distribution referenced there on first run (cached afterwards
+# under $HOME/.m2/wrapper), and then runs it with the arguments below.
+
+set -e
+
+MAVEN_PROJECTBASEDIR="$(cd "$(dirname "$0")" && pwd)"
+WRAPPER_JAR="$MAVEN_PROJECTBASEDIR/.mvn/wrapper/maven-wrapper.jar"
+
+if [ ! -f "$WRAPPER_JAR" ]; then
+  echo "Cannot find $WRAPPER_JAR - run this from the project root." >&2
+  exit 1
+fi
+
+if [ -n "$JAVA_HOME" ]; then
+  JAVA_EXE="$JAVA_HOME/bin/java"
+else
+  JAVA_EXE="java"
+fi
+
+exec "$JAVA_EXE" -classpath "$WRAPPER_JAR" "-Dmaven.multiModuleProjectDirectory=$MAVEN_PROJECTBASEDIR" org.apache.maven.wrapper.MavenWrapperMain "$@"

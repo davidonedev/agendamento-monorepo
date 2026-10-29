@@ -5,29 +5,35 @@
  * fetch independentes — não dependem mais deste context.
  */
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import type { TenantData, TenantStatus } from '../types';
+import type { TenantData, TenantStatus, PlanConfig, TenantPlan } from '../types';
 import {
   listTenantsApi,
   getPlatformMetricsApi,
   createTenantApi,
   updateTenantApi,
   deleteTenantApi,
+  listPlanConfigsApi,
+  updatePlanConfigApi,
   type TenantWithCounts,
   type PlatformMetrics,
   type CreateTenantPayload,
+  type UpdatePlanConfigPayload,
 } from '../services/super.service';
 
 interface PlatformContextType {
   tenants: TenantWithCounts[];
   metrics: PlatformMetrics | null;
+  planConfigs: PlanConfig[];
   loading: boolean;
   error: string | null;
   refreshTenants: () => Promise<void>;
-  // CRUD
+  // CRUD tenants
   createTenant: (payload: CreateTenantPayload) => Promise<void>;
   updateTenant: (id: string, payload: Partial<Omit<CreateTenantPayload, 'adminPassword'>> & { status?: TenantStatus }) => Promise<void>;
   deleteTenant: (id: string) => Promise<void>;
   updateTenantStatus: (tenantId: string, status: TenantStatus) => Promise<void>;
+  // CRUD planos
+  updatePlanConfig: (plan: TenantPlan, payload: UpdatePlanConfigPayload) => Promise<void>;
   // retrocompatibilidade
   allData: TenantData[];
 }
@@ -37,6 +43,7 @@ const PlatformContext = createContext<PlatformContextType | null>(null);
 export function PlatformProvider({ children }: { children: React.ReactNode }) {
   const [tenants, setTenants] = useState<TenantWithCounts[]>([]);
   const [metrics, setMetrics] = useState<PlatformMetrics | null>(null);
+  const [planConfigs, setPlanConfigs] = useState<PlanConfig[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -44,12 +51,14 @@ export function PlatformProvider({ children }: { children: React.ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const [data, metricsData] = await Promise.all([
+      const [data, metricsData, plans] = await Promise.all([
         listTenantsApi(),
         getPlatformMetricsApi(),
+        listPlanConfigsApi(),
       ]);
       setTenants(data);
       setMetrics(metricsData);
+      setPlanConfigs(plans);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar tenants');
     } finally {
@@ -86,6 +95,11 @@ export function PlatformProvider({ children }: { children: React.ReactNode }) {
     setTenants((prev) => prev.map((t) => (t.id === tenantId ? { ...t, status } : t)));
   };
 
+  const updatePlanConfig = async (plan: TenantPlan, payload: UpdatePlanConfigPayload) => {
+    const updated = await updatePlanConfigApi(plan, payload);
+    setPlanConfigs((prev) => prev.map((p) => (p.plan === plan ? updated : p)));
+  };
+
   // allData: retrocompatibilidade — mapeia tenants para TenantData vazio
   // Os componentes que precisam de dados completos devem usar seus próprios contexts
   const allData: TenantData[] = tenants.map((t) => ({
@@ -99,7 +113,7 @@ export function PlatformProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <PlatformContext.Provider
-      value={{ tenants, metrics, loading, error, refreshTenants, createTenant, updateTenant, deleteTenant, updateTenantStatus, allData }}
+      value={{ tenants, metrics, planConfigs, loading, error, refreshTenants, createTenant, updateTenant, deleteTenant, updateTenantStatus, updatePlanConfig, allData }}
     >
       {children}
     </PlatformContext.Provider>

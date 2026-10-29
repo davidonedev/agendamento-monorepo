@@ -16,6 +16,11 @@ export interface TenantSettingsPayload {
   bannerUrl?: string | null;
   isOpen?: boolean;
   minAdvanceMinutes?: number;
+  // WhatsApp
+  whatsappApiUrl?:   string | null;
+  whatsappApiKey?:   string | null;
+  whatsappInstance?: string | null;
+  whatsappTemplate?: string | null;
 }
 
 export async function updateTenantSettingsApi(payload: TenantSettingsPayload): Promise<Tenant> {

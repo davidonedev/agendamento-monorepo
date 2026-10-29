@@ -97,7 +97,14 @@ export function PublicTenantProvider({ children }: { children: React.ReactNode }
     );
   }
 
-  if (!data) return null;
+  if (!data) {
+    return (
+      <div className="flex h-screen flex-col items-center justify-center gap-4 text-muted-foreground">
+        <p className="text-xl font-semibold">Algo deu errado</p>
+        <p className="text-sm">Não foi possível carregar o portal. Tente novamente.</p>
+      </div>
+    );
+  }
 
   const addAppointment = async (payload: PublicBookingPayload): Promise<Appointment[]> => {
     const { appointments } = await createPublicBookingApi(tenantSlug!, payload);
