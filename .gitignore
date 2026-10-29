@@ -35,3 +35,6 @@ Thumbs.db
 
 # Backend uploads
 backend/uploads/
+docker-compose.yml
+docker-compose.override.yml
+Dockerfile
