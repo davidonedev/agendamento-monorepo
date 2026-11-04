@@ -18,6 +18,32 @@ import java.util.regex.Pattern;
 @Service
 public class WhatsappService {
 
+    public static final String REMINDER_24H_TEMPLATE = """
+            Olá {{clientName}}! 👋
+
+            Lembrete: você tem um agendamento *amanhã* em *{{tenantName}}*!
+
+            📅 *Data:* {{date}}
+            🕐 *Horário:* {{time}}
+            ✂️ *Profissional:* {{professional}}
+            💈 *Serviço(s):* {{services}}
+
+            Acesse o link abaixo para gerenciar seu agendamento:
+            {{portalLink}}
+
+            _Para cancelar, faça isso com pelo menos 1h de antecedência._""";
+
+    public static final String REMINDER_2H_TEMPLATE = """
+            Olá {{clientName}}! 🔔
+
+            Daqui a pouco é o seu horário em *{{tenantName}}*!
+
+            🕐 *Horário:* {{time}}
+            ✂️ *Profissional:* {{professional}}
+            💈 *Serviço(s):* {{services}}
+
+            Te esperamos em breve! 😊""";
+
     public static final String DEFAULT_TEMPLATE = """
             Olá {{clientName}}! 👋
 

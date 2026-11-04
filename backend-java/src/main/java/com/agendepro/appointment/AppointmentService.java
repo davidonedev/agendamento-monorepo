@@ -141,10 +141,7 @@ public class AppointmentService {
     // ─── Mapeamento para resposta (com client/professional/service aninhados) ────────
 
     public AppointmentResponse toResponse(Appointment a) {
-        Client client = clientRepository.findById(a.getClientId()).orElse(null);
-        Professional professional = professionalRepository.findById(a.getProfessionalId()).orElse(null);
-        ServiceOffering service = serviceOfferingRepository.findById(a.getServiceId()).orElse(null);
-        return build(a, client, professional, service);
+        return toResponses(List.of(a)).getFirst();
     }
 
     public List<AppointmentResponse> toResponses(List<Appointment> appointments) {

@@ -64,6 +64,32 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID>,
             @Param("endTime") String endTime,
             @Param("excludeId") UUID excludeId);
 
+    /**
+     * Agendamentos que precisam de lembrete de 24h:
+     * horário de início (Brasília) entre 23h e 25h a partir de agora, sem lembrete enviado.
+     */
+    @Query(value = """
+            SELECT * FROM appointments
+            WHERE status NOT IN ('CANCELLED','COMPLETED')
+              AND reminder_24h_sent_at IS NULL
+              AND (date || 'T' || start_time || ':00')::timestamp AT TIME ZONE 'America/Sao_Paulo'
+                  BETWEEN (now() + interval '23 hours') AND (now() + interval '25 hours')
+            """, nativeQuery = true)
+    List<Appointment> findNeedingReminder24h();
+
+    /**
+     * Agendamentos que precisam de lembrete de 2h:
+     * horário de início (Brasília) entre 1h e 2.5h a partir de agora, sem lembrete enviado.
+     */
+    @Query(value = """
+            SELECT * FROM appointments
+            WHERE status NOT IN ('CANCELLED','COMPLETED')
+              AND reminder_2h_sent_at IS NULL
+              AND (date || 'T' || start_time || ':00')::timestamp AT TIME ZONE 'America/Sao_Paulo'
+                  BETWEEN (now() + interval '1 hour') AND (now() + interval '150 minutes')
+            """, nativeQuery = true)
+    List<Appointment> findNeedingReminder2h();
+
     /** Porta de listAbsentClients (reminder.controller.ts) — último agendamento não cancelado por cliente. */
     @Query("""
             SELECT a FROM Appointment a

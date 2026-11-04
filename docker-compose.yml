@@ -1,0 +1,43 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: agendamento_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: agendepro_java
+    ports:
+      - '5433:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend-java
+      dockerfile: Dockerfile
+    container_name: agendamento_backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - ./backend-java/.env
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/agendepro_java
+      DB_USERNAME: postgres
+      DB_PASSWORD: 123456
+    ports:
+      - '3333:3333'
+    volumes:
+      - ./backend-java/uploads:/app/uploads
+
+volumes:
+  postgres_data:

@@ -58,6 +58,12 @@ public class Appointment {
     @Column(length = 500)
     private String notes;
 
+    @Column(name = "reminder_24h_sent_at")
+    private Instant reminder24hSentAt;
+
+    @Column(name = "reminder_2h_sent_at")
+    private Instant reminder2hSentAt;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     @Builder.Default
     private Instant createdAt = Instant.now();

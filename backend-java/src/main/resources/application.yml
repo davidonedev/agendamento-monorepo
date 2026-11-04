@@ -87,6 +87,10 @@ app:
     # Falhas de login por e-mail (independente do IP)
     login-failures-per-email: 5
     login-failures-window-minutes: 15
+  reminders:
+    enabled: ${REMINDERS_ENABLED:true}
+    # Intervalo entre cada varredura de lembretes (ms). Default: 5 minutos.
+    check-interval-ms: ${REMINDERS_INTERVAL_MS:300000}
   password-reset:
     ttl-minutes: ${PASSWORD_RESET_TTL_MINUTES:30}
     max-per-hour: 3                 # pedidos de reset por conta/hora (excedente é ignorado em silêncio)
