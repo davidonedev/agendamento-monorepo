@@ -175,6 +175,7 @@ public class AppointmentService {
         return new AppointmentResponse(
                 a.getId(), a.getTenantId(), a.getClientId(), a.getProfessionalId(), a.getServiceId(),
                 a.getDate(), a.getStartTime(), a.getEndTime(), a.getStatus(), a.getPrice(), a.getNotes(),
-                a.getCreatedAt(), a.getUpdatedAt(), clientSummary, professionalSummary, serviceResponse);
+                a.getCreatedAt(), a.getUpdatedAt(), clientSummary, professionalSummary, serviceResponse,
+                a.getPaymentStatus(), a.getPaymentId());
     }
 }

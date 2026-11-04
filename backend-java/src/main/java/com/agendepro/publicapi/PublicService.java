@@ -330,6 +330,49 @@ public class PublicService {
     }
 
     @Transactional
+    public MessageResponse reschedulePublicAppointment(String slug, UUID id, RescheduleRequest request) {
+        Tenant t = resolveTenant(slug);
+        Appointment a = appointmentRepository.findByIdAndTenantIdAndClientId(id, t.getId(), request.clientId())
+                .orElseThrow(() -> AppException.notFound("Agendamento não encontrado"));
+
+        if (a.getStatus() == AppointmentStatus.CANCELLED) {
+            throw new AppException("Agendamento cancelado não pode ser reagendado.", 400, "ALREADY_CANCELLED");
+        }
+        if (a.getStatus() == AppointmentStatus.COMPLETED) {
+            throw new AppException("Agendamentos concluídos não podem ser reagendados.", 400, "ALREADY_COMPLETED");
+        }
+
+        ZonedDateTime apptDateTime = LocalDateTime.parse(a.getDate() + "T" + a.getStartTime() + ":00")
+                .atZone(SAO_PAULO);
+        long diffMinutes = ChronoUnit.MINUTES.between(ZonedDateTime.now(SAO_PAULO), apptDateTime);
+        if (diffMinutes < 60) {
+            throw new AppException("O prazo de reagendamento encerrou. Com menos de 1 hora de antecedência só é possível cancelar.",
+                    400, "RESCHEDULE_WINDOW_EXPIRED");
+        }
+
+        ServiceOffering service = serviceOfferingRepository.findById(a.getServiceId())
+                .orElseThrow(() -> AppException.notFound("Serviço não encontrado"));
+
+        String newStart = request.startTimeHHmm();
+        String newEnd = ScheduleService.addMinutes(newStart, service.getDuration());
+
+        pgAdvisoryLockService.lockProfessionalSchedule(a.getProfessionalId(), request.date());
+        if (scheduleService.checkConflict(t.getId(), a.getProfessionalId(), request.date(), newStart, newEnd, a.getId())) {
+            throw new AppException("Horário não disponível. Por favor escolha outro horário.", 409, "SCHEDULE_CONFLICT");
+        }
+
+        a.setDate(request.date());
+        a.setStartTime(newStart);
+        a.setEndTime(newEnd);
+        // Reset reminders so they fire again for the new time
+        a.setReminder24hSentAt(null);
+        a.setReminder2hSentAt(null);
+        appointmentRepository.save(a);
+
+        return new MessageResponse("Agendamento reagendado com sucesso.");
+    }
+
+    @Transactional
     public MessageResponse cancelPublicAppointment(String slug, UUID id, CancelBookingRequest request) {
         Tenant t = resolveTenant(slug);
         Appointment appointment = appointmentRepository.findByIdAndTenantIdAndClientId(id, t.getId(), request.clientId())

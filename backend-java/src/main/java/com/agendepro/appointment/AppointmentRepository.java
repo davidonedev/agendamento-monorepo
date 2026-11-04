@@ -90,6 +90,8 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID>,
             """, nativeQuery = true)
     List<Appointment> findNeedingReminder2h();
 
+    Optional<Appointment> findByPaymentId(String paymentId);
+
     /** Porta de listAbsentClients (reminder.controller.ts) — último agendamento não cancelado por cliente. */
     @Query("""
             SELECT a FROM Appointment a

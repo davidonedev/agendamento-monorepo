@@ -96,6 +96,9 @@ app:
     max-per-hour: 3                 # pedidos de reset por conta/hora (excedente é ignorado em silêncio)
   email-change:
     ttl-minutes: ${EMAIL_CHANGE_TTL_MINUTES:60}
+  mercadopago:
+    # Token de plataforma (fallback quando o tenant não tem mp_access_token próprio)
+    access-token: ${MP_ACCESS_TOKEN:}
 
 springdoc:
   swagger-ui:

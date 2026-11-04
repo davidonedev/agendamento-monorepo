@@ -86,6 +86,9 @@ public class Tenant {
     @Column(name = "whatsapp_template", length = 2000)
     private String whatsappTemplate;
 
+    @Column(name = "mp_access_token", length = 500)
+    private String mpAccessToken;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     @Builder.Default
     private Instant createdAt = Instant.now();

@@ -64,6 +64,21 @@ public class Appointment {
     @Column(name = "reminder_2h_sent_at")
     private Instant reminder2hSentAt;
 
+    @Column(name = "payment_status", length = 50)
+    private String paymentStatus;
+
+    @Column(name = "payment_id", length = 255)
+    private String paymentId;
+
+    @Column(name = "payment_expires_at")
+    private Instant paymentExpiresAt;
+
+    @Column(name = "payment_qr_code", columnDefinition = "TEXT")
+    private String paymentQrCode;
+
+    @Column(name = "payment_qr_code_base64", columnDefinition = "TEXT")
+    private String paymentQrCodeBase64;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     @Builder.Default
     private Instant createdAt = Instant.now();

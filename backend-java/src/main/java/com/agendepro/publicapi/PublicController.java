@@ -124,6 +124,12 @@ public class PublicController {
         return ResponseEntity.ok(ApiResponse.ok(publicService.cancelPublicAppointment(slug, id, request)));
     }
 
+    @PatchMapping("/{slug}/appointments/{id}/reschedule")
+    public ResponseEntity<ApiResponse<MessageResponse>> reschedule(
+            @PathVariable String slug, @PathVariable UUID id, @Valid @RequestBody RescheduleRequest request) {
+        return ResponseEntity.ok(ApiResponse.ok(publicService.reschedulePublicAppointment(slug, id, request)));
+    }
+
     @GetMapping("/{slug}/verify-email")
     public ResponseEntity<ApiResponse<ClientAuthResponse>> verifyEmail(@PathVariable String slug, @RequestParam String token) {
         return ResponseEntity.ok(ApiResponse.ok(publicService.verifyClientEmail(slug, token)));

@@ -62,6 +62,7 @@ public class SecurityConfig {
                                 "/api/auth/email-change/confirm",
                                 "/api/auth/access-help",
                                 "/api/public/**",
+                                "/api/webhooks/**",
                                 "/uploads/**",
                                 "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**"
                         ).permitAll()
