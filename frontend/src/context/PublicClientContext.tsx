@@ -67,6 +67,7 @@ export function PublicClientProvider({ children }: { children: React.ReactNode }
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function usePublicClient() {
   const ctx = useContext(PublicClientContext);
   if (!ctx) throw new Error('usePublicClient must be inside PublicClientProvider');

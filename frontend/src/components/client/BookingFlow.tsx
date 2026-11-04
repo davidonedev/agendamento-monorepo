@@ -49,17 +49,19 @@ function findSimilarPair(selected: Service[]): [Service, Service] | null {
 interface ClientForm {
   name: string; email: string; phone: string;
   password: string; confirmPassword: string;
+  lgpdConsent: boolean;
 }
-const EMPTY_FORM: ClientForm = { name: '', email: '', phone: '', password: '', confirmPassword: '' };
+const EMPTY_FORM: ClientForm = { name: '', email: '', phone: '', password: '', confirmPassword: '', lgpdConsent: false };
 
 function validateClientForm(f: ClientForm) {
-  const errors: Partial<ClientForm> = {};
+  const errors: Partial<Record<keyof ClientForm, string>> = {};
   if (f.name.trim().length < 2)                     errors.name = 'Nome deve ter ao menos 2 caracteres.';
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email)) errors.email = 'E-mail inválido.';
   const phoneDigits = f.phone.replace(/\D/g, '');
   if (phoneDigits.length < 10)                      errors.phone = 'Telefone obrigatório (com DDD).';
   if (f.password.length < 6)                        errors.password = 'Senha deve ter ao menos 6 caracteres.';
   if (f.password !== f.confirmPassword)             errors.confirmPassword = 'As senhas não coincidem.';
+  if (!f.lgpdConsent)                               errors.lgpdConsent = 'Você precisa aceitar os termos para continuar.';
   return errors;
 }
 
@@ -92,7 +94,7 @@ export default function BookingFlow() {
 
   // Estado do formulário de cadastro inline
   const [clientForm,   setClientForm]   = useState<ClientForm>(EMPTY_FORM);
-  const [clientErrors, setClientErrors] = useState<Partial<ClientForm>>({});
+  const [clientErrors, setClientErrors] = useState<Partial<Record<keyof ClientForm, string>>>({});
   const [showPass,     setShowPass]     = useState(false);
   const [showConfirm,  setShowConfirm]  = useState(false);
   const [pendingPhone, setPendingPhone] = useState(''); // número WhatsApp exibido
@@ -670,6 +672,25 @@ export default function BookingFlow() {
                 </Button>
               </div>
             )}
+
+            <div className="space-y-1.5">
+              <label className="flex items-start gap-2.5 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  className="mt-0.5 h-4 w-4 rounded border-gray-300 accent-current"
+                  checked={clientForm.lgpdConsent}
+                  onChange={e => { setClientForm(p => ({ ...p, lgpdConsent: e.target.checked })); setClientErrors(p => ({ ...p, lgpdConsent: undefined })); }}
+                />
+                <span className="text-xs text-muted-foreground leading-snug">
+                  Li e aceito os{' '}
+                  <a href="/termos" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">Termos de Uso</a>
+                  {' '}e a{' '}
+                  <a href="/privacidade" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">Política de Privacidade</a>
+                  , e concordo com o tratamento dos meus dados conforme a LGPD.
+                </span>
+              </label>
+              {clientErrors.lgpdConsent && <p className="text-xs text-destructive">{clientErrors.lgpdConsent}</p>}
+            </div>
 
             {!accountExistsMsg && (
               <Button type="submit" className="w-full" size="lg" style={btnStyle} disabled={submitting}>

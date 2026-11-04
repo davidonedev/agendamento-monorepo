@@ -13,9 +13,9 @@ const COLORS = ['#7c3aed', '#d97706', '#16a34a', '#2563eb', '#dc2626'];
 export default function PlatformMetricsView() {
   const { allData } = usePlatform();
   const [range, setRange] = useState<RevenueRange>('month');
-  const now = new Date();
 
   const interval = useMemo(() => {
+    const now = new Date();
     switch (range) {
       case 'day':   return { start: startOfDay(now),  end: endOfDay(now)  };
       case 'week':  return { start: startOfWeek(now, { weekStartsOn: 1 }), end: endOfWeek(now, { weekStartsOn: 1 }) };

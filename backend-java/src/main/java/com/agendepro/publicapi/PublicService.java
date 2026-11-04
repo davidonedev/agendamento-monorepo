@@ -33,6 +33,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
 import java.time.temporal.ChronoUnit;
@@ -63,9 +64,13 @@ public class PublicService {
     private final AppointmentService appointmentService;
     private final ProfessionalService professionalService;
     private final com.agendepro.blockedslot.BlockedSlotRepository blockedSlotRepository;
+    private final PgAdvisoryLockService pgAdvisoryLockService;
 
     @org.springframework.beans.factory.annotation.Value("${app.app-url}")
     private String appUrl;
+
+    @org.springframework.beans.factory.annotation.Value("${app.seed.enabled:false}")
+    private boolean seedEnabled;
 
     private final RestClient restClient = RestClient.create();
 
@@ -88,6 +93,7 @@ public class PublicService {
 
     @Transactional(readOnly = true)
     public List<LoginDataTenant> getLoginData() {
+        if (!seedEnabled) return List.of();
         List<Tenant> tenants = tenantRepository.findAll().stream()
                 .filter(t -> t.getStatus() != TenantStatus.SUSPENDED)
                 .sorted(Comparator.comparing(Tenant::getName))
@@ -206,6 +212,7 @@ public class PublicService {
 
         Client client = upsertClient(t.getId(), request.clientName(), request.clientEmail(), request.clientPhone());
 
+        pgAdvisoryLockService.lockProfessionalSchedule(professionalId, request.date());
         if (scheduleService.checkConflict(t.getId(), professionalId, request.date(), startTime, blockEnd, null)) {
             throw new AppException("Horário não disponível. Por favor escolha outro horário.", 409, "SCHEDULE_CONFLICT");
         }
@@ -335,9 +342,10 @@ public class PublicService {
             throw new AppException("Agendamentos concluídos não podem ser cancelados.", 400, "ALREADY_COMPLETED");
         }
 
-        // date/startTime são tratados como horário de Brasília (America/Sao_Paulo), igual ao Node.
-        LocalDateTime apptDateTime = LocalDateTime.parse(appointment.getDate() + "T" + appointment.getStartTime() + ":00");
-        long diffMinutes = ChronoUnit.MINUTES.between(LocalDateTime.now(SAO_PAULO), apptDateTime);
+        // date/startTime são armazenados como horário de Brasília — converter para ZonedDateTime antes de comparar.
+        ZonedDateTime apptDateTime = LocalDateTime.parse(appointment.getDate() + "T" + appointment.getStartTime() + ":00")
+                .atZone(SAO_PAULO);
+        long diffMinutes = ChronoUnit.MINUTES.between(ZonedDateTime.now(SAO_PAULO), apptDateTime);
 
         if (diffMinutes < 60) {
             throw new AppException("O prazo de cancelamento encerrou. Com menos de 1 hora de antecedência só é possível reagendar.",
@@ -435,6 +443,7 @@ public class PublicService {
         String startTime = request.startTimeHHmm();
         String blockEnd = ScheduleService.addMinutes(startTime, totalDuration);
 
+        pgAdvisoryLockService.lockProfessionalSchedule(professionalId, request.date());
         if (scheduleService.checkConflict(t.getId(), professionalId, request.date(), startTime, blockEnd, null)) {
             throw new AppException("Horário não disponível. Por favor escolha outro horário.", 409, "SCHEDULE_CONFLICT");
         }

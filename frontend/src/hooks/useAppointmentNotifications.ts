@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import type { Appointment, Client, Service } from '@/types';
 
 export interface AppNotification {
@@ -89,8 +89,10 @@ export function useAppointmentNotifications(
   const prevRef      = useRef<Appointment[] | null>(null);
   const clientsRef   = useRef(clients);
   const servicesRef  = useRef(services);
-  clientsRef.current  = clients;
-  servicesRef.current = services;
+  useLayoutEffect(() => {
+    clientsRef.current  = clients;
+    servicesRef.current = services;
+  });
 
   // Persiste sempre que a lista muda
   useEffect(() => {
@@ -139,6 +141,7 @@ export function useAppointmentNotifications(
     });
 
     if (toAdd.length > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setNotifications(ns => [...toAdd, ...ns].slice(0, 100));
       setActiveToasts(ts => [...ts, ...toAdd]);
       playSound(toAdd[0].type);

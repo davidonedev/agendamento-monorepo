@@ -38,3 +38,4 @@ backend/uploads/
 docker-compose.yml
 docker-compose.override.yml
 Dockerfile
+!backend-java/Dockerfile

@@ -34,6 +34,7 @@ public class AppointmentService {
     private final ProfessionalRepository professionalRepository;
     private final ClientRepository clientRepository;
     private final ClientService clientService;
+    private final PgAdvisoryLockService pgAdvisoryLockService;
 
     @Transactional(readOnly = true)
     public List<AppointmentResponse> list(
@@ -77,6 +78,7 @@ public class AppointmentService {
         String startTime = request.startTimeHHmm();
         String endTime = ScheduleService.addMinutes(startTime, service.getDuration());
 
+        pgAdvisoryLockService.lockProfessionalSchedule(request.professionalId(), request.date());
         boolean conflict = scheduleService.checkConflict(tenantId, request.professionalId(), request.date(), startTime, endTime, null);
         if (conflict) {
             throw new AppException("Conflito de horário: já existe agendamento neste período", 409, "SCHEDULE_CONFLICT");

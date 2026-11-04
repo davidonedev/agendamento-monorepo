@@ -45,6 +45,8 @@ import MyAppointments             from './components/client/MyAppointments';
 import RegisterPage               from './pages/RegisterPage';
 import ProfessionalRegisterPage   from './pages/ProfessionalRegisterPage';
 import VerifyEmailPage            from './pages/VerifyEmailPage';
+import TermsPage                  from './pages/TermsPage';
+import PrivacyPage                from './pages/PrivacyPage';
 
 // ─── Route guards ─────────────────────────────────────────────────────────────
 function SuperGuard({ children }: { children: React.ReactNode }) {
@@ -74,6 +76,8 @@ function AppRoutes() {
     <Routes>
       {/* Landing page */}
       <Route index element={<LandingPage />} />
+      <Route path="termos"      element={<TermsPage />} />
+      <Route path="privacidade" element={<PrivacyPage />} />
 
       {/* Auth */}
       <Route path="login"  element={<LoginPage />} />

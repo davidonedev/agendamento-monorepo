@@ -15,18 +15,15 @@ export default function VerifyEmailPage() {
   const { login }           = usePublicClient();
   const { data: { tenant } } = usePublicTenant();
 
-  const [status,  setStatus]  = useState<Status>('loading');
-  const [message, setMessage] = useState('');
+  const token = searchParams.get('token');
+  const isInvalidLink = !token || !tenantSlug;
+  const [status,  setStatus]  = useState<Status>(() => isInvalidLink ? 'error' : 'loading');
+  const [message, setMessage] = useState(() => isInvalidLink ? 'Link de verificação inválido.' : '');
 
   useEffect(() => {
-    const token = searchParams.get('token');
-    if (!token || !tenantSlug) {
-      setStatus('error');
-      setMessage('Link de verificação inválido.');
-      return;
-    }
+    if (isInvalidLink) return;
 
-    verifyClientEmailApi(tenantSlug, token)
+    verifyClientEmailApi(tenantSlug!, token!)
       .then(clientData => {
         login(clientData);
         setStatus('success');
@@ -35,7 +32,7 @@ export default function VerifyEmailPage() {
         setStatus('error');
         setMessage(err instanceof Error ? err.message : 'Link inválido ou expirado.');
       });
-  }, [tenantSlug, searchParams, login]);
+  }, [tenantSlug, token, isInvalidLink, login]);
 
   return (
     <div className="max-w-md mx-auto text-center space-y-6 py-16">

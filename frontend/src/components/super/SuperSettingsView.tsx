@@ -11,6 +11,7 @@ const PRESET_COLORS = [
 
 const STORAGE_KEY = 'super_primary_color';
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function getSuperColor(): string {
   return localStorage.getItem(STORAGE_KEY) ?? '#1e1b4b';
 }

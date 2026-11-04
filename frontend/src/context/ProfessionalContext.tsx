@@ -85,7 +85,6 @@ export function ProfessionalProvider({ children }: { children: React.ReactNode }
     } finally {
       setLoading(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -172,6 +171,7 @@ export function ProfessionalProvider({ children }: { children: React.ReactNode }
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useProfessional() {
   const ctx = useContext(ProfessionalContext);
   if (!ctx) throw new Error('useProfessional must be inside ProfessionalProvider');

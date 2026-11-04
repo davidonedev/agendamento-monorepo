@@ -40,6 +40,7 @@ export function PublicTenantProvider({ children }: { children: React.ReactNode }
   useEffect(() => {
     if (!tenantSlug) return;
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     setNotFound(false);
     setSuspended(false);
@@ -115,6 +116,7 @@ export function PublicTenantProvider({ children }: { children: React.ReactNode }
   };
 
   // Mantido por compatibilidade — o backend cria o cliente automaticamente no booking
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const addClient = (_client: Client) => { /* no-op: backend gerencia */ };
 
   return (
@@ -126,6 +128,7 @@ export function PublicTenantProvider({ children }: { children: React.ReactNode }
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function usePublicTenant() {
   const ctx = useContext(PublicTenantContext);
   if (!ctx) throw new Error('usePublicTenant must be inside PublicTenantProvider');
