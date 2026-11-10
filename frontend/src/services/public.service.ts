@@ -85,8 +85,10 @@ export async function createPublicBookingApi(
 
 // ─── Agendamentos do cliente no portal público ────────────────────────────────
 export interface PublicAppointment extends Appointment {
-  professional?: { id: string; name: string; specialty: string };
-  service?:      { id: string; name: string; duration: number; price: number };
+  professional?:  { id: string; name: string; specialty: string };
+  service?:       { id: string; name: string; duration: number; price: number };
+  paymentStatus?: string;
+  paymentId?:     string;
 }
 
 export async function getClientAppointmentsApi(
@@ -144,6 +146,47 @@ export async function registerAndBookApi(
     message: raw.message,
     phone:   raw.phone,
   };
+}
+
+// ─── Reagendar agendamento pelo cliente ───────────────────────────────────────
+
+export async function reschedulePublicAppointmentApi(
+  slug: string,
+  appointmentId: string,
+  payload: { clientId: string; date: string; startTime: string },
+): Promise<void> {
+  await api.patch(`/public/${slug}/appointments/${appointmentId}/reschedule`, payload);
+}
+
+// ─── Pagamento Pix via Mercado Pago ───────────────────────────────────────────
+
+export interface PixPaymentData {
+  paymentId:     string;
+  qrCode:        string;
+  qrCodeBase64:  string;
+  status:        string;
+  expiresAt:     string;
+}
+
+export async function createPixPaymentApi(
+  slug: string,
+  appointmentId: string,
+  clientId: string,
+): Promise<PixPaymentData> {
+  return api.post<PixPaymentData>(
+    `/public/${slug}/appointments/${appointmentId}/pay/pix`,
+    { clientId },
+  );
+}
+
+export async function getPaymentStatusApi(
+  slug: string,
+  appointmentId: string,
+  clientId: string,
+): Promise<{ status: string | null; paymentId: string | null }> {
+  return api.get(
+    `/public/${slug}/appointments/${appointmentId}/payment-status?clientId=${clientId}`,
+  );
 }
 
 // ─── Verificação de e-mail ────────────────────────────────────────────────────

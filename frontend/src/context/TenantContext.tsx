@@ -24,6 +24,7 @@ import type { ClientPayload } from '../services/clients.service';
 import type { CreateAppointmentPayload } from '../services/appointments.service';
 import type { BlockedSlotPayload } from '../services/blockedSlots.service';
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const PLAN_LIMITS: Record<string, { professionals: number; services: number }> = {
   basic:      { professionals: 2,       services: 3       },
   pro:        { professionals: Infinity, services: Infinity },
@@ -336,6 +337,7 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
   return <TenantContext.Provider value={ctx}>{children}</TenantContext.Provider>;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useTenant() {
   const ctx = useContext(TenantContext);
   if (!ctx) throw new Error('useTenant must be inside TenantProvider');

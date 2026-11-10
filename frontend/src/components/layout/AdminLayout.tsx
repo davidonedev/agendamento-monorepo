@@ -54,7 +54,7 @@ export default function AdminLayout() {
         sessionStorage.setItem('agendepro_session', backup);
         localStorage.removeItem(IMPERSONATION_BACKUP_KEY);
       }
-    } catch {}
+    } catch { /* ignore */ }
     logout();
     window.location.href = '/super/tenants';
   };

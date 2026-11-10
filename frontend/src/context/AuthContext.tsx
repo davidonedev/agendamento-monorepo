@@ -102,7 +102,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // salva a sessão atual do super admin como backup no localStorage
     const currentRaw = sessionStorage.getItem(SESSION_KEY);
     if (currentRaw) {
-      try { localStorage.setItem(IMPERSONATION_BACKUP_KEY, currentRaw); } catch {}
+      try { localStorage.setItem(IMPERSONATION_BACKUP_KEY, currentRaw); } catch { /* ignore */ }
     }
     saveSession(data.token, data.user);
     const authUser: AuthUser = {
@@ -117,7 +117,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const session = JSON.parse(raw);
         sessionStorage.setItem(SESSION_KEY, JSON.stringify({ ...session, user: authUser }));
-      } catch {}
+      } catch { /* ignore */ }
     }
   };
 
@@ -128,6 +128,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error('useAuth must be inside AuthProvider');

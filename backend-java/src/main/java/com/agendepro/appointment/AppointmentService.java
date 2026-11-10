@@ -34,6 +34,7 @@ public class AppointmentService {
     private final ProfessionalRepository professionalRepository;
     private final ClientRepository clientRepository;
     private final ClientService clientService;
+    private final PgAdvisoryLockService pgAdvisoryLockService;
 
     @Transactional(readOnly = true)
     public List<AppointmentResponse> list(
@@ -77,6 +78,7 @@ public class AppointmentService {
         String startTime = request.startTimeHHmm();
         String endTime = ScheduleService.addMinutes(startTime, service.getDuration());
 
+        pgAdvisoryLockService.lockProfessionalSchedule(request.professionalId(), request.date());
         boolean conflict = scheduleService.checkConflict(tenantId, request.professionalId(), request.date(), startTime, endTime, null);
         if (conflict) {
             throw new AppException("Conflito de horário: já existe agendamento neste período", 409, "SCHEDULE_CONFLICT");
@@ -139,10 +141,7 @@ public class AppointmentService {
     // ─── Mapeamento para resposta (com client/professional/service aninhados) ────────
 
     public AppointmentResponse toResponse(Appointment a) {
-        Client client = clientRepository.findById(a.getClientId()).orElse(null);
-        Professional professional = professionalRepository.findById(a.getProfessionalId()).orElse(null);
-        ServiceOffering service = serviceOfferingRepository.findById(a.getServiceId()).orElse(null);
-        return build(a, client, professional, service);
+        return toResponses(List.of(a)).getFirst();
     }
 
     public List<AppointmentResponse> toResponses(List<Appointment> appointments) {
@@ -176,6 +175,7 @@ public class AppointmentService {
         return new AppointmentResponse(
                 a.getId(), a.getTenantId(), a.getClientId(), a.getProfessionalId(), a.getServiceId(),
                 a.getDate(), a.getStartTime(), a.getEndTime(), a.getStatus(), a.getPrice(), a.getNotes(),
-                a.getCreatedAt(), a.getUpdatedAt(), clientSummary, professionalSummary, serviceResponse);
+                a.getCreatedAt(), a.getUpdatedAt(), clientSummary, professionalSummary, serviceResponse,
+                a.getPaymentStatus(), a.getPaymentId());
     }
 }

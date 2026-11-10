@@ -10,10 +10,10 @@ export default function FinalCta() {
 
         <div className="relative">
           <h2 className="mx-auto max-w-2xl font-display text-3xl font-bold leading-[1.1] tracking-tight text-white sm:text-5xl">
-            Pronto para organizar sua agenda?
+            Comece hoje. Sua agenda vai agradecer.
           </h2>
           <p className="mx-auto mt-5 max-w-lg text-base text-white/75">
-            Barbearia, salão ou estética: crie sua conta em poucos minutos e compartilhe seu link hoje mesmo.
+            Crie sua conta em minutos, coloque o link na bio e deixe seus clientes agendarem enquanto você atende.
           </p>
           <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link

@@ -15,6 +15,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import static org.springframework.security.config.Customizer.withDefaults;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -60,6 +62,7 @@ public class SecurityConfig {
                                 "/api/auth/email-change/confirm",
                                 "/api/auth/access-help",
                                 "/api/public/**",
+                                "/api/webhooks/**",
                                 "/uploads/**",
                                 "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**"
                         ).permitAll()
@@ -67,7 +70,15 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/**").hasRole("TENANT_ADMIN")
                         .requestMatchers("/api/professional/**").hasRole("PROFESSIONAL")
                         .anyRequest().authenticated())
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .headers(headers -> headers
+                        .frameOptions(frame -> frame.sameOrigin())
+                        .contentTypeOptions(withDefaults())
+                        .httpStrictTransportSecurity(hsts -> hsts
+                                .includeSubDomains(true)
+                                .maxAgeInSeconds(31_536_000)
+                        )
+                );
 
         return http.build();
     }

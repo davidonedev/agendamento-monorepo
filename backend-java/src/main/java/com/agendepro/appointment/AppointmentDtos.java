@@ -28,7 +28,8 @@ public final class AppointmentDtos {
             UUID id, UUID tenantId, UUID clientId, UUID professionalId, UUID serviceId,
             String date, String startTime, String endTime, AppointmentStatus status, Double price, String notes,
             Instant createdAt, Instant updatedAt,
-            ClientSummary client, ProfessionalSummary professional, ServiceOfferingDtos.ServiceResponse service
+            ClientSummary client, ProfessionalSummary professional, ServiceOfferingDtos.ServiceResponse service,
+            String paymentStatus, String paymentId
     ) {
     }
 

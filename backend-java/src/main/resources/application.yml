@@ -63,7 +63,7 @@ logging:
 # ─── Configurações próprias da aplicação (equivalentes ao config/env.ts do backend Node) ───
 app:
   jwt:
-    secret: ${JWT_SECRET:troque-este-segredo-em-producao-agendepro-java}
+    secret: ${JWT_SECRET}
     expires-in: ${JWT_EXPIRES_IN:7d}
   cors:
     origins: ${CORS_ORIGIN:http://localhost:5173,http://localhost:3000}
@@ -72,7 +72,7 @@ app:
   bcrypt-rounds: ${BCRYPT_ROUNDS:10}
   mail-from: ${SMTP_FROM:AgendePro <noreply@agendepro.com>}
   seed:
-    enabled: ${SEED_ENABLED:true}
+    enabled: ${SEED_ENABLED:false}
   rate-limit:
     auth-capacity: 20
     auth-refill-minutes: 15
@@ -87,11 +87,18 @@ app:
     # Falhas de login por e-mail (independente do IP)
     login-failures-per-email: 5
     login-failures-window-minutes: 15
+  reminders:
+    enabled: ${REMINDERS_ENABLED:true}
+    # Intervalo entre cada varredura de lembretes (ms). Default: 5 minutos.
+    check-interval-ms: ${REMINDERS_INTERVAL_MS:300000}
   password-reset:
     ttl-minutes: ${PASSWORD_RESET_TTL_MINUTES:30}
     max-per-hour: 3                 # pedidos de reset por conta/hora (excedente é ignorado em silêncio)
   email-change:
     ttl-minutes: ${EMAIL_CHANGE_TTL_MINUTES:60}
+  mercadopago:
+    # Token de plataforma (fallback quando o tenant não tem mp_access_token próprio)
+    access-token: ${MP_ACCESS_TOKEN:}
 
 springdoc:
   swagger-ui:

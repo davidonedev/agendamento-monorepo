@@ -34,15 +34,15 @@ export default function RevenueView() {
   const adminColor = tenant.adminColor ?? tenant.primaryColor;
   const COLORS = [adminColor, ...PIE_PALETTE];
 
-  const now = new Date();
   const [range, setRange] = useState<RevenueRange>('month');
 
   // Custom range defaults: last 30 days
-  const [customStart, setCustomStart] = useState(format(startOfMonth(now), 'yyyy-MM-dd'));
-  const [customEnd,   setCustomEnd]   = useState(format(now, 'yyyy-MM-dd'));
+  const [customStart, setCustomStart] = useState(() => format(startOfMonth(new Date()), 'yyyy-MM-dd'));
+  const [customEnd,   setCustomEnd]   = useState(() => format(new Date(), 'yyyy-MM-dd'));
 
   // ── Interval ────────────────────────────────────────────────────────────────
   const interval = useMemo(() => {
+    const now = new Date();
     if (range === 'custom') {
       const s = parseISO(customStart);
       const e = parseISO(customEnd);
@@ -172,7 +172,7 @@ export default function RevenueView() {
                     type="date"
                     value={customEnd}
                     min={customStart}
-                    max={format(now, 'yyyy-MM-dd')}
+                    max={format(new Date(), 'yyyy-MM-dd')}
                     onChange={e => setCustomEnd(e.target.value)}
                     className="w-44"
                   />

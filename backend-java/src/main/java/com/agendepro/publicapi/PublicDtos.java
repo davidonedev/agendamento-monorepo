@@ -132,6 +132,16 @@ public final class PublicDtos {
     public record ResendVerificationRequest(@NotBlank @Email String email) {
     }
 
+    public record RescheduleRequest(
+            @NotNull UUID clientId,
+            @NotBlank @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$") String date,
+            @NotBlank @Pattern(regexp = "^\\d{2}:\\d{2}(:\\d{2})?$") String startTime
+    ) {
+        public String startTimeHHmm() {
+            return startTime.length() >= 5 ? startTime.substring(0, 5) : startTime;
+        }
+    }
+
     public record BusinessRegisterRequest(
             @NotBlank @Size(min = 2, max = 100) String ownerName,
             @NotBlank @Email String email,

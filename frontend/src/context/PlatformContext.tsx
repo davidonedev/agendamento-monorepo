@@ -120,6 +120,7 @@ export function PlatformProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function usePlatform() {
   const ctx = useContext(PlatformContext);
   if (!ctx) throw new Error('usePlatform must be inside PlatformProvider');

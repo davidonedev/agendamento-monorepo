@@ -19,12 +19,12 @@ export default function ProfRevenueView() {
   const { appointments, services, professional, tenant } = useProfessional();
   const accentColor = tenant.adminColor ?? tenant.primaryColor;
 
-  const now = new Date();
   const [range, setRange] = useState<RevenueRange>('month');
-  const [customStart, setCustomStart] = useState(format(startOfMonth(now), 'yyyy-MM-dd'));
-  const [customEnd,   setCustomEnd]   = useState(format(now, 'yyyy-MM-dd'));
+  const [customStart, setCustomStart] = useState(() => format(startOfMonth(new Date()), 'yyyy-MM-dd'));
+  const [customEnd,   setCustomEnd]   = useState(() => format(new Date(), 'yyyy-MM-dd'));
 
   const interval = useMemo(() => {
+    const now = new Date();
     if (range === 'custom') {
       const s = parseISO(customStart), e = parseISO(customEnd);
       return { start: startOfDay(s), end: endOfDay(e > s ? e : s) };
@@ -100,7 +100,7 @@ export default function ProfRevenueView() {
               </div>
               <div className="space-y-1">
                 <Label className="text-xs">Data final</Label>
-                <Input type="date" value={customEnd} min={customStart} max={format(now, 'yyyy-MM-dd')} onChange={e => setCustomEnd(e.target.value)} className="w-44" />
+                <Input type="date" value={customEnd} min={customStart} max={format(new Date(), 'yyyy-MM-dd')} onChange={e => setCustomEnd(e.target.value)} className="w-44" />
               </div>
               <p className="text-xs text-muted-foreground self-end pb-2">
                 {spanDays} {spanDays === 1 ? 'dia' : 'dias'} · {useMonths ? 'por mês' : 'por dia'}
