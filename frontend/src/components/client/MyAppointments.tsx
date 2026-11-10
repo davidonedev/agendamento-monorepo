@@ -74,9 +74,6 @@ function isUpcoming(appt: PublicAppointment): boolean {
   return !isPast(apptDate) && appt.status !== 'cancelled';
 }
 
-function todayStr() {
-  return format(new Date(), 'yyyy-MM-dd');
-}
 
 // ─── Componente principal ─────────────────────────────────────────────────────
 
