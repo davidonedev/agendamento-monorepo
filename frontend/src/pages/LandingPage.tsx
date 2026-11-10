@@ -6,7 +6,6 @@ import Benefits from '@/components/landing/Benefits';
 import ForWho from '@/components/landing/ForWho';
 import Features from '@/components/landing/Features';
 import HowItWorks from '@/components/landing/HowItWorks';
-import Testimonials from '@/components/landing/Testimonials';
 import Pricing from '@/components/landing/Pricing';
 import Faq from '@/components/landing/Faq';
 import FinalCta from '@/components/landing/FinalCta';
@@ -39,7 +38,6 @@ export default function LandingPage() {
         <ForWho />
         <Features />
         <HowItWorks />
-        <Testimonials />
         <Pricing />
         <Faq />
         <FinalCta />
