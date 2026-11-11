@@ -42,7 +42,7 @@ export default function LandingFooter() {
       </div>
 
       <div className="mx-auto mt-12 px-5 sm:px-8" style={{ maxWidth: 'var(--container-max)' }}><div className="border-t border-white/20 pt-6 text-sm text-lp-on-dark-muted">
-        © {new Date().getFullYear()} AgendePro. Todos os direitos reservados.
+        © {new Date().getFullYear()} Nimbo. Todos os direitos reservados.
       </div></div>
     </footer>
   );

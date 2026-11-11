@@ -157,7 +157,7 @@ export default function ClientLayout() {
       </main>
 
       <footer className="border-t py-6 text-center text-sm text-muted-foreground">
-        <p>{tenant.name} · Agendamento online via AgendePro</p>
+        <p>{tenant.name} · Agendamento online via Nimbo</p>
       </footer>
     </div>
   );

@@ -347,7 +347,7 @@ export const ANNUAL_DISCOUNT = 0.2;
 // ─── FAQ ──────────────────────────────────────────────────────────────────────
 export const FAQ = [
   {
-    q: 'O que é o AgendePro?',
+    q: 'O que é o Nimbo?',
     a: 'Uma plataforma de agendamento e gestão para barbearias, salões e estética: link próprio para o cliente marcar, agenda por profissional, histórico de clientes e controle financeiro em um só lugar.',
   },
   {
@@ -364,7 +364,7 @@ export const FAQ = [
   },
   {
     q: 'Tem cobrança por agendamento?',
-    a: 'Não. O AgendePro cobra uma assinatura mensal fixa. Você recebe quantos agendamentos quiser sem pagar por cada um.',
+    a: 'Não. O Nimbo cobra uma assinatura mensal fixa. Você recebe quantos agendamentos quiser sem pagar por cada um.',
   },
   {
     q: 'Cada profissional tem acesso separado?',

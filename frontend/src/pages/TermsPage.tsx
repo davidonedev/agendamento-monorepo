@@ -15,12 +15,12 @@ export default function TermsPage() {
 
       <section className="space-y-3 text-sm leading-relaxed">
         <h2 className="font-semibold text-base">1. Aceitação dos termos</h2>
-        <p>Ao criar uma conta ou usar o AgendePro, você concorda com estes Termos de Uso. Se não concordar, não utilize o serviço.</p>
+        <p>Ao criar uma conta ou usar o Nimbo, você concorda com estes Termos de Uso. Se não concordar, não utilize o serviço.</p>
       </section>
 
       <section className="space-y-3 text-sm leading-relaxed">
         <h2 className="font-semibold text-base">2. Descrição do serviço</h2>
-        <p>O AgendePro é uma plataforma de agendamento online para profissionais de beleza, estética e saúde. Oferecemos ferramentas para gerenciar horários, clientes e serviços.</p>
+        <p>O Nimbo é uma plataforma de agendamento online para profissionais de beleza, estética e saúde. Oferecemos ferramentas para gerenciar horários, clientes e serviços.</p>
       </section>
 
       <section className="space-y-3 text-sm leading-relaxed">
@@ -40,7 +40,7 @@ export default function TermsPage() {
 
       <section className="space-y-3 text-sm leading-relaxed">
         <h2 className="font-semibold text-base">6. Limitação de responsabilidade</h2>
-        <p>O AgendePro não se responsabiliza por danos indiretos decorrentes do uso ou da impossibilidade de uso da plataforma.</p>
+        <p>O Nimbo não se responsabiliza por danos indiretos decorrentes do uso ou da impossibilidade de uso da plataforma.</p>
       </section>
 
       <section className="space-y-3 text-sm leading-relaxed">

@@ -107,7 +107,7 @@ export default function Hero() {
   return (
     <section id="inicio" aria-label="Destaques" className="lp-on-dark lp-hero-bg relative isolate overflow-hidden text-white">
       <div className="mx-auto w-full px-5 py-12 sm:px-8 lg:py-20" style={{ maxWidth: 'var(--container-max)' }}>
-        <Carousel label="Destaques do AgendePro" autoPlayMs={8000} onDark>
+        <Carousel label="Destaques do Nimbo" autoPlayMs={8000} onDark>
           {SLIDES.map((s, i) => {
             const Heading = i === 0 ? 'h1' : 'h2';
             return (

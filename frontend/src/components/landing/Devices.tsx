@@ -85,7 +85,7 @@ export default function Devices() {
   return (
     <div
       role="img"
-      aria-label="Agenda do AgendePro no notebook e os agendamentos do cliente no celular"
+      aria-label="Agenda do Nimbo no notebook e os agendamentos do cliente no celular"
       className="relative mx-auto aspect-[1.32/1] w-full max-w-[640px] [container-type:inline-size]"
     >
       {/* notebook */}

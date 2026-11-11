@@ -17,7 +17,7 @@ export function MidCta() {
   return (
     <Section tone="blue" labelledBy="mid-cta-title">
       <div className="reveal mx-auto max-w-3xl text-center">
-        <h2 id="mid-cta-title" className="lp-h2">Se tem hora marcada no seu negócio, tem AgendePro na sua gestão</h2>
+        <h2 id="mid-cta-title" className="lp-h2">Se tem hora marcada no seu negócio, tem Nimbo na sua gestão</h2>
         <p className="mt-4 text-lg text-white/90">Agenda, equipe, clientes e caixa no mesmo lugar.</p>
         <div className="mt-8"><LpButton to="/signup" variant="light" size="lg">Teste grátis</LpButton></div>
       </div>

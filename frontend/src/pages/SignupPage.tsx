@@ -378,7 +378,7 @@ export default function SignupPage() {
           {step === 'role' && (
             <div className="w-full max-w-[720px]">
               <div className="mb-8 text-center">
-                <h1 className="lp-h2">Como você quer usar o AgendePro?</h1>
+                <h1 className="lp-h2">Como você quer usar o Nimbo?</h1>
                 <p className="mt-3 text-lp-muted">Escolha seu perfil para personalizar sua experiência.</p>
               </div>
 

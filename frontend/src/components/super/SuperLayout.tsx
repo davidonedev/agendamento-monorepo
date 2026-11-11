@@ -69,7 +69,7 @@ export default function SuperLayout() {
               <Scissors className="h-4 w-4 text-primary-foreground" />
             </div>
             <div>
-              <p className="font-bold text-sm leading-tight">AgendePro</p>
+              <p className="font-bold text-sm leading-tight">Nimbo</p>
               <Badge variant="secondary" className="text-[10px] px-1 py-0 h-4">Super Admin</Badge>
             </div>
           </div>

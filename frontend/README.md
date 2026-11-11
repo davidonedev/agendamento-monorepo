@@ -1,8 +1,8 @@
-# AgendePro — Frontend (React + Vite)
+# Nimbo — Frontend (React + Vite)
 
 **Português** | [English](#english)
 
-Interface web do AgendePro (React 19, TypeScript, Vite, Tailwind). Roda em http://localhost:5173.
+Interface web do Nimbo (React 19, TypeScript, Vite, Tailwind). Roda em http://localhost:5173.
 
 ## Requisitos
 
@@ -71,9 +71,9 @@ Portal público do cliente (agendamento): http://localhost:5173/barber-kings
 
 <a id="english"></a>
 
-[Português](#agendepro--frontend-react--vite) | **English**
+[Português](#nimbo--frontend-react--vite) | **English**
 
-AgendePro web interface (React 19, TypeScript, Vite, Tailwind). Runs at http://localhost:5173.
+Nimbo web interface (React 19, TypeScript, Vite, Tailwind). Runs at http://localhost:5173.
 
 ## Requirements
 

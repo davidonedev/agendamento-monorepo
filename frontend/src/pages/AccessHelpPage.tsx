@@ -7,7 +7,7 @@ import { AuthShell, AuthAlert, authInputClass, authButtonClass, authLabelClass }
 
 const TYPES: { value: AccessHelpRequesterType; label: string; who: string }[] = [
   { value: 'professional', label: 'Sou funcionário',          who: 'o responsável pela sua barbearia' },
-  { value: 'tenant_admin', label: 'Sou dono da barbearia',    who: 'a equipe AgendePro' },
+  { value: 'tenant_admin', label: 'Sou dono da barbearia',    who: 'a equipe Nimbo' },
 ];
 
 export default function AccessHelpPage() {
@@ -61,7 +61,7 @@ export default function AccessHelpPage() {
               <li>Se perdeu o acesso ao e-mail ou não lembra qual usou, preencha o formulário abaixo.</li>
               <li>
                 <strong className="text-lp-black">Funcionário:</strong> o dono da sua barbearia recebe o pedido e atualiza seu acesso.{' '}
-                <strong className="text-lp-black">Dono:</strong> a equipe AgendePro confirma seus dados e atualiza o acesso.
+                <strong className="text-lp-black">Dono:</strong> a equipe Nimbo confirma seus dados e atualiza o acesso.
               </li>
               <li>Você será contatado pelo telefone ou contato informado. Nunca pedimos sua senha.</li>
             </ol>

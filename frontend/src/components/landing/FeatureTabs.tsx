@@ -102,7 +102,7 @@ export default function FeatureTabs() {
       <h2 id="features-title" className="lp-h2 reveal text-center">Tudo o que o seu negócio precisa</h2>
 
       <TabsPrimitive.Root defaultValue="0" className="mt-10">
-        <TabsPrimitive.List aria-label="Recursos do AgendePro" className="flex gap-2 overflow-x-auto pb-2 lg:justify-center [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <TabsPrimitive.List aria-label="Recursos do Nimbo" className="flex gap-2 overflow-x-auto pb-2 lg:justify-center [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {FEATURES.map((f, i) => (
             <TabsPrimitive.Trigger
               key={f.title}
