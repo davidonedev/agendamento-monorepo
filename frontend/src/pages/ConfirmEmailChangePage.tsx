@@ -33,7 +33,7 @@ export default function ConfirmEmailChangePage() {
   return (
     <AuthShell title="Confirmação de e-mail">
       <div className="space-y-5">
-        {state.kind === 'loading' && <p className="text-center text-sm text-white/60">Confirmando…</p>}
+        {state.kind === 'loading' && <p className="text-center text-sm text-lp-muted">Confirmando…</p>}
         {state.kind !== 'loading' && <AuthAlert kind={state.kind}>{state.message}</AuthAlert>}
         {state.kind !== 'loading' && <Link to="/login" replace className={authButtonClass}>Ir para o login</Link>}
       </div>

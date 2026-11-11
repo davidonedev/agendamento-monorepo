@@ -1,6 +1,6 @@
 import {
   CalendarCheck, BellRing, Users, BarChart3, Contact, Layers,
-  CalendarPlus, LayoutDashboard, Repeat, Scissors, Palette, Flower2, User,
+  Scissors, Palette, Flower2, User,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -11,12 +11,34 @@ import {
  */
 
 // ─── Navegação ────────────────────────────────────────────────────────────────
-export const NAV_LINKS = [
-  { href: '#para-quem',     label: 'Para quem é' },
-  { href: '#recursos',      label: 'Recursos' },
-  { href: '#como-funciona', label: 'Como funciona' },
-  { href: '#planos',        label: 'Planos' },
-  { href: '#duvidas',       label: 'Dúvidas' },
+export interface NavItem {
+  label: string;
+  /** Link direto. Sem `href`, o item abre um dropdown com `children`. */
+  href?: string;
+  children?: { href: string; label: string; hint?: string }[];
+}
+
+export const NAV_ITEMS: NavItem[] = [
+  {
+    label: 'Para quem é',
+    children: [
+      { href: '#seg-barbearia', label: 'Barbearias',      hint: 'Agenda por barbeiro e link na bio' },
+      { href: '#seg-salao',     label: 'Salões de cabelo', hint: 'Cada serviço com a duração real' },
+      { href: '#seg-estetica',  label: 'Estética',        hint: 'Histórico e retorno de clientes' },
+      { href: '#seg-lash',      label: 'Lash design',     hint: 'Cada técnica com a duração certa' },
+      { href: '#seg-manicure',  label: 'Manicure',        hint: 'Manicure, pedicure e gel na agenda' },
+    ],
+  },
+  {
+    label: 'Recursos',
+    children: [
+      { href: '#agendamento',   label: 'Como o cliente agenda', hint: 'Veja o fluxo funcionando' },
+      { href: '#recursos',      label: 'Tudo o que o sistema faz', hint: 'Agenda, equipe, caixa e clientes' },
+      { href: '#como-funciona', label: 'Como começar',    hint: 'Três passos até o primeiro cliente' },
+    ],
+  },
+  { label: 'Planos', href: '#planos' },
+  { label: 'Dúvidas', href: '#duvidas' },
 ];
 
 // ─── Segmentos ────────────────────────────────────────────────────────────────
@@ -58,7 +80,7 @@ export const SEGMENTS: Segment[] = [
     id: 'barbearia',
     label: 'Barbearia',
     icon: Scissors,
-    tone: { text: 'text-landing-petrol', soft: 'bg-landing-petrol/10', border: 'border-landing-petrol/30', dot: 'bg-landing-petrol' },
+    tone: { text: 'text-lp-primary', soft: 'bg-lp-primary-soft', border: 'border-lp-primary/30', dot: 'bg-lp-primary' },
     heroLine: 'Coloque o link na bio, cada cliente escolhe o barbeiro e marca o horário. Você abre o painel e já sabe quem chega.',
     mockup: {
       business: 'Barbearia do Centro',
@@ -91,7 +113,7 @@ export const SEGMENTS: Segment[] = [
     id: 'salao',
     label: 'Salão de beleza',
     icon: Palette,
-    tone: { text: 'text-landing-plum', soft: 'bg-landing-lavender/25', border: 'border-landing-lavender/60', dot: 'bg-landing-plum' },
+    tone: { text: 'text-lp-success-ink', soft: 'bg-lp-success-soft', border: 'border-lp-success/40', dot: 'bg-lp-success' },
     heroLine: 'Coloração de 3 horas e escova de 40 minutos convivem na mesma agenda: cada serviço ocupa o tempo certo, sem encaixe na pressa.',
     mockup: {
       business: 'Studio Aurora',
@@ -123,7 +145,7 @@ export const SEGMENTS: Segment[] = [
     id: 'estetica',
     label: 'Estética',
     icon: Flower2,
-    tone: { text: 'text-landing-sage-ink', soft: 'bg-landing-sage-light', border: 'border-landing-sage/40', dot: 'bg-landing-sage' },
+    tone: { text: 'text-lp-black', soft: 'bg-lp-alt', border: 'border-lp-line', dot: 'bg-lp-black' },
     heroLine: 'Cada procedimento com duração própria, histórico completo da cliente e agenda na palma da mão.',
     mockup: {
       business: 'Clínica Lumi',
@@ -155,7 +177,7 @@ export const SEGMENTS: Segment[] = [
     id: 'autonomo',
     label: 'Autônomos',
     icon: User,
-    tone: { text: 'text-amber-600', soft: 'bg-amber-50', border: 'border-amber-200', dot: 'bg-amber-400' },
+    tone: { text: 'text-lp-primary', soft: 'bg-lp-primary-soft', border: 'border-lp-primary/30', dot: 'bg-lp-primary' },
     heroLine: 'Coloque o link no WhatsApp. A cliente marca, escolhe o serviço e recebe a confirmação — sem você parar o que está fazendo.',
     mockup: {
       business: 'Ana Lima',
@@ -183,43 +205,6 @@ export const SEGMENTS: Segment[] = [
       ],
       confirmedBooking: 'Amanhã, 10:00 · Manicure',
     },
-  },
-];
-
-// ─── Faixa de serviços ────────────────────────────────────────────────────────
-export const SERVICE_TAGS = [
-  'Corte + barba', 'Coloração', 'Limpeza de pele', 'Escova', 'Design de sobrancelha',
-  'Corte degradê', 'Manicure', 'Depilação', 'Progressiva', 'Massagem', 'Mechas', 'Drenagem',
-];
-
-// ─── Benefícios universais ────────────────────────────────────────────────────
-export interface Benefit {
-  icon: LucideIcon;
-  title: string;
-  description: string;
-  confirm?: string;
-}
-
-export const BENEFITS: Benefit[] = [
-  {
-    icon: CalendarPlus,
-    title: 'Mais agendamentos',
-    description: 'Seu link funciona enquanto você atende. O cliente escolhe serviço, profissional e horário sem precisar ligar.',
-  },
-  {
-    icon: BellRing,
-    title: 'Menos faltas',
-    description: 'Confirmação automática pelo WhatsApp no ato do agendamento. Horário confirmado, menos falta de última hora.',
-  },
-  {
-    icon: LayoutDashboard,
-    title: 'Gestão simples',
-    description: 'Agenda, equipe, clientes e caixa em um único painel. Sem caderno, sem planilha, sem anotação perdida no celular.',
-  },
-  {
-    icon: Repeat,
-    title: 'Clientes que voltam',
-    description: 'Veja quem não voltou em 30, 60 ou 90 dias e chame de volta com uma mensagem pronta para o WhatsApp.',
   },
 ];
 
@@ -326,27 +311,6 @@ export const STEPS = [
   },
 ];
 
-// ─── Depoimentos ──────────────────────────────────────────────────────────────
-// PLACEHOLDER: todos fictícios. Substitua por depoimentos reais (com autorização) antes de publicar.
-export interface Testimonial {
-  quote: string;
-  name: string;
-  role: string;
-  segment: SegmentId;
-  placeholder?: boolean;
-}
-
-export const TESTIMONIALS: Testimonial[] = [
-  { segment: 'barbearia', placeholder: true, quote: 'Parei de perder horário por mensagem esquecida. O cliente agenda sozinho e eu só atendo.', name: 'Rafael S.', role: 'Dono de barbearia' },
-  { segment: 'salao',     placeholder: true, quote: 'Coloração e escova finalmente convivem na mesma agenda, sem eu refazer encaixe toda hora.', name: 'Juliana R.', role: 'Dona de salão' },
-  { segment: 'estetica',  placeholder: true, quote: 'Abro o histórico da cliente antes da sessão e sei exatamente o que foi feito e quando.', name: 'Patrícia L.', role: 'Esteticista' },
-  { segment: 'barbearia', placeholder: true, quote: 'Cada profissional vê a própria agenda e eu acompanho o faturamento de todos no fim do mês.', name: 'Thiago M.', role: 'Gestor de barbearia' },
-  { segment: 'salao',     placeholder: true, quote: 'Coloquei o link no Instagram e as clientes começaram a marcar à noite, com o salão fechado.', name: 'Camila T.', role: 'Cabeleireira' },
-  { segment: 'estetica',  placeholder: true, quote: 'Depilação, limpeza de pele e massagem, cada uma com seu tempo. Configurei tudo em uma tarde.', name: 'Fernanda A.', role: 'Dona de studio de estética' },
-  { segment: 'autonomo',  placeholder: true, quote: 'Parei de negociar horário no WhatsApp. O link faz isso por mim enquanto estou atendendo.', name: 'Ana L.', role: 'Manicure autônoma' },
-  { segment: 'autonomo',  placeholder: true, quote: 'Hoje minha agenda fica cheia sem eu ficar no celular. Minha cliente já marca a próxima antes de sair.', name: 'Carla M.', role: 'Sobrancelhista' },
-];
-
 // ─── Planos (espelham os padrões de PlanConfig no backend) ────────────────────
 export interface Plan {
   name: string;
@@ -383,7 +347,7 @@ export const ANNUAL_DISCOUNT = 0.2;
 // ─── FAQ ──────────────────────────────────────────────────────────────────────
 export const FAQ = [
   {
-    q: 'O que é o AgendePro?',
+    q: 'O que é o Nimbo?',
     a: 'Uma plataforma de agendamento e gestão para barbearias, salões e estética: link próprio para o cliente marcar, agenda por profissional, histórico de clientes e controle financeiro em um só lugar.',
   },
   {
@@ -400,7 +364,7 @@ export const FAQ = [
   },
   {
     q: 'Tem cobrança por agendamento?',
-    a: 'Não. O AgendePro cobra uma assinatura mensal fixa. Você recebe quantos agendamentos quiser sem pagar por cada um.',
+    a: 'Não. O Nimbo cobra uma assinatura mensal fixa. Você recebe quantos agendamentos quiser sem pagar por cada um.',
   },
   {
     q: 'Cada profissional tem acesso separado?',
@@ -418,4 +382,23 @@ export const FAQ = [
     q: 'Meus dados ficam seguros?',
     a: 'Sim. Cada negócio só acessa seus próprios dados e o sistema é protegido por login e senha em todas as entradas.',
   },
+];
+
+// ─── Blocos por segmento (3 bullets + link) ───────────────────────────────────
+export const SEGMENT_BULLETS: Record<SegmentId, string[]> = {
+  barbearia: ['Link de agendamento na bio do Instagram', 'Agenda separada por barbeiro', 'Lista de quem passou do prazo de voltar'],
+  salao:     ['Duração real de cada serviço', 'Sem conflito de horário na agenda', 'Confirmação automática no WhatsApp'],
+  estetica:  ['Histórico completo de cada cliente', 'Agenda por profissional', 'Retornos organizados no mesmo painel'],
+  autonomo:  ['Link próprio para colocar no WhatsApp', 'Agenda pessoal no celular', 'Histórico de clientes sem planilha'],
+};
+
+// ─── Abas de recursos (índice de FEATURES → rótulo curto) ─────────────────────
+export const FEATURE_TAB_LABELS = ['Agendamento 24h', 'Confirmação', 'Equipe', 'Faturamento', 'Serviços', 'Clientes'];
+
+// ─── Faixa de números: só fatos do produto, sem métricas inventadas ───────────
+export const STATS = [
+  { value: '24h',  label: 'de agendamento online, mesmo com o negócio fechado' },
+  { value: '3',    label: 'passos entre criar a conta e receber o primeiro cliente' },
+  { value: 'R$ 0', label: 'de cobrança por agendamento: só a mensalidade fixa' },
+  { value: `R$ ${PLANS[0].monthly}`, label: 'por mês no plano inicial, com Trial grátis antes' },
 ];

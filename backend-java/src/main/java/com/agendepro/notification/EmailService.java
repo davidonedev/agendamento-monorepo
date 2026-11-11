@@ -71,7 +71,7 @@ public class EmailService {
         context.setVariable("userName", userName);
         context.setVariable("actionUrl", resetUrl);
         context.setVariable("ttlMinutes", ttlMinutes);
-        send(to, "Redefinição de senha — AgendePro", "email/password-reset", context, "Redefinição de senha", resetUrl);
+        send(to, "Redefinição de senha — Nimbo", "email/password-reset", context, "Redefinição de senha", resetUrl);
     }
 
     @Async
@@ -80,7 +80,7 @@ public class EmailService {
         context.setVariable("userName", userName);
         context.setVariable("actionUrl", confirmUrl);
         context.setVariable("ttlMinutes", ttlMinutes);
-        send(to, "Confirme seu novo e-mail — AgendePro", "email/email-change", context, "Confirmação de novo e-mail", confirmUrl);
+        send(to, "Confirme seu novo e-mail — Nimbo", "email/email-change", context, "Confirmação de novo e-mail", confirmUrl);
     }
 
     @Async
@@ -88,7 +88,7 @@ public class EmailService {
         Context context = new Context();
         context.setVariable("userName", userName);
         context.setVariable("newEmail", newEmail);
-        send(to, "Seu e-mail de acesso foi alterado — AgendePro", "email/email-changed", context, "Aviso de e-mail alterado", null);
+        send(to, "Seu e-mail de acesso foi alterado — Nimbo", "email/email-changed", context, "Aviso de e-mail alterado", null);
     }
 
     private void send(String to, String subject, String template, Context context, String devLabel, String devLink) {

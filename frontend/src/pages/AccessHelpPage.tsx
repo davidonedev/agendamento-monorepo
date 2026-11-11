@@ -7,7 +7,7 @@ import { AuthShell, AuthAlert, authInputClass, authButtonClass, authLabelClass }
 
 const TYPES: { value: AccessHelpRequesterType; label: string; who: string }[] = [
   { value: 'professional', label: 'Sou funcionário',          who: 'o responsável pela sua barbearia' },
-  { value: 'tenant_admin', label: 'Sou dono da barbearia',    who: 'a equipe AgendePro' },
+  { value: 'tenant_admin', label: 'Sou dono da barbearia',    who: 'a equipe Nimbo' },
 ];
 
 export default function AccessHelpPage() {
@@ -54,14 +54,14 @@ export default function AccessHelpPage() {
         </div>
       ) : (
         <>
-          <div className="mb-6 space-y-2 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4 text-sm text-white/60">
-            <p className="font-medium text-white/80">Como funciona</p>
+          <div className="mb-6 space-y-2 rounded-2xl border border-lp-line bg-lp-alt p-4 text-sm text-lp-black/70">
+            <p className="font-bold text-lp-black">Como funciona</p>
             <ol className="list-decimal space-y-1 pl-5">
-              <li>Se você só esqueceu a senha, use <Link to="/forgot-password" className="text-white underline underline-offset-4">Esqueci minha senha</Link>.</li>
+              <li>Se você só esqueceu a senha, use <Link to="/forgot-password" className="font-bold text-lp-primary underline underline-offset-4">Esqueci minha senha</Link>.</li>
               <li>Se perdeu o acesso ao e-mail ou não lembra qual usou, preencha o formulário abaixo.</li>
               <li>
-                <strong className="text-white/80">Funcionário:</strong> o dono da sua barbearia recebe o pedido e atualiza seu acesso.{' '}
-                <strong className="text-white/80">Dono:</strong> a equipe AgendePro confirma seus dados e atualiza o acesso.
+                <strong className="text-lp-black">Funcionário:</strong> o dono da sua barbearia recebe o pedido e atualiza seu acesso.{' '}
+                <strong className="text-lp-black">Dono:</strong> a equipe Nimbo confirma seus dados e atualiza o acesso.
               </li>
               <li>Você será contatado pelo telefone ou contato informado. Nunca pedimos sua senha.</li>
             </ol>
@@ -73,10 +73,10 @@ export default function AccessHelpPage() {
               {TYPES.map(t => (
                 <label
                   key={t.value}
-                  className={`cursor-pointer rounded-xl border px-3 py-2.5 text-center text-sm transition-colors ${
+                  className={`cursor-pointer rounded-xl border px-3 py-2.5 text-center text-sm transition-colors focus-within:ring-[3px] focus-within:ring-lp-primary ${
                     form.requesterType === t.value
-                      ? 'border-violet-400/60 bg-violet-500/15 text-white'
-                      : 'border-white/[0.1] bg-white/[0.03] text-white/60 hover:text-white'
+                      ? 'border-lp-primary bg-lp-primary-soft font-bold text-lp-black'
+                      : 'border-lp-line bg-lp-white text-lp-black/70 hover:border-lp-primary'
                   }`}
                 >
                   <input
@@ -112,7 +112,7 @@ export default function AccessHelpPage() {
                 className={`${authInputClass} h-auto py-3`} />
             </div>
 
-            <p className="text-xs text-white/40">Seu pedido será analisado por {selected.who}.</p>
+            <p className="text-xs text-lp-muted">Seu pedido será analisado por {selected.who}.</p>
 
             {error && <AuthAlert kind="error">{error}</AuthAlert>}
 

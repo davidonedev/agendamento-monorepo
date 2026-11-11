@@ -70,7 +70,7 @@ app:
   upload-dir: ${UPLOAD_DIR:uploads}
   app-url: ${APP_URL:http://localhost:5173}
   bcrypt-rounds: ${BCRYPT_ROUNDS:10}
-  mail-from: ${SMTP_FROM:AgendePro <noreply@agendepro.com>}
+  mail-from: ${SMTP_FROM:Nimbo <noreply@agendepro.com>}
   seed:
     enabled: ${SEED_ENABLED:false}
   rate-limit:

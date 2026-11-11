@@ -385,7 +385,7 @@ export default function SettingsView({ section = 'account' }: Props) {
               ))}
             </ul>
           </div>
-          <p className="text-xs text-muted-foreground">Para fazer upgrade, entre em contato com a equipe AgendePro.</p>
+          <p className="text-xs text-muted-foreground">Para fazer upgrade, entre em contato com a equipe Nimbo.</p>
         </CardContent>
       </Card>
 

@@ -1,48 +1,47 @@
 import { useReveal } from '@/hooks/useReveal';
 import LandingNav from '@/components/landing/LandingNav';
 import Hero from '@/components/landing/Hero';
-import Marquee from '@/components/landing/Marquee';
+import Segments from '@/components/landing/Segments';
+import BookingDemo from '@/components/landing/BookingDemo';
+import FeatureTabs from '@/components/landing/FeatureTabs';
 import Benefits from '@/components/landing/Benefits';
-import ForWho from '@/components/landing/ForWho';
-import Features from '@/components/landing/Features';
+import Stats from '@/components/landing/Stats';
 import HowItWorks from '@/components/landing/HowItWorks';
 import Pricing from '@/components/landing/Pricing';
 import Faq from '@/components/landing/Faq';
-import FinalCta from '@/components/landing/FinalCta';
+import { CtaStrip, FinalCta, MidCta } from '@/components/landing/Ctas';
 import LandingFooter from '@/components/landing/LandingFooter';
-import { SERVICE_TAGS } from '@/components/landing/content';
+import StickyCta from '@/components/landing/StickyCta';
+import CookieNotice from '@/components/landing/CookieNotice';
 
+/**
+ * Ritmo (referência: negocios.trinks.com): hero → segmentos → painel de benefícios → CTA → demo de agendamento →
+ * abas de recursos → CTA → números → como começar → planos → FAQ → CTA final.
+ */
 export default function LandingPage() {
   const ref = useReveal<HTMLDivElement>();
 
   return (
-    <div ref={ref} className="min-h-screen overflow-x-clip bg-landing-bg font-landing text-landing-ink antialiased selection:bg-landing-lavender/50">
+    <div ref={ref} className="lp-root min-h-screen overflow-x-clip selection:bg-lp-primary/20">
+      <a href="#conteudo" className="sr-only z-[60] rounded-full bg-lp-white px-5 py-3 font-bold text-lp-primary focus:not-sr-only focus:fixed focus:left-4 focus:top-4">Pular para o conteúdo</a>
       <LandingNav />
-      <main>
+      <main id="conteudo" tabIndex={-1} className="outline-none">
         <Hero />
-
-        {/* Faixa de serviços */}
-        <div className="border-y border-landing-line bg-landing-surface py-6">
-          <p className="mb-4 text-center text-xs text-landing-muted">Do corte à limpeza de pele, cada serviço no seu tempo</p>
-          <Marquee>
-            {SERVICE_TAGS.map(tag => (
-              <span key={tag} className="mx-6 flex items-center gap-6 whitespace-nowrap font-display text-lg font-semibold text-landing-ink/60">
-                {tag}
-                <span className="h-1.5 w-1.5 rounded-full bg-landing-lavender" aria-hidden="true" />
-              </span>
-            ))}
-          </Marquee>
-        </div>
-
+        <Segments />
         <Benefits />
-        <ForWho />
-        <Features />
+        <CtaStrip />
+        <BookingDemo />
+        <FeatureTabs />
+        <MidCta />
+        <Stats />
         <HowItWorks />
         <Pricing />
         <Faq />
         <FinalCta />
       </main>
       <LandingFooter />
+      <StickyCta />
+      <CookieNotice />
     </div>
   );
 }

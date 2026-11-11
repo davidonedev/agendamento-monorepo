@@ -1,0 +1,133 @@
+/*
+ * FONTE ÚNICA DE TOKENS DO PRODUTO (landing, login e cadastro). Variáveis em :root; a base tipográfica
+ * (fonte, fundo, cor) vale dentro de .lp-root: envolva cada tela pública com <div className="lp-root">.
+ *
+ * Cada cor é guardada como canais RGB ("R G B") para o Tailwind aplicar opacidade
+ * (bg-lp-primary/10) e o CSS puro usar rgb(var(--color-primary)).
+ *
+ * Paleta de marca (únicas cores de marca):
+ *   azul   #293ffb  → --color-primary   CTAs, links, destaque, aba ativa, fundos de destaque
+ *   verde  #1ba566  → --color-success   confirmações, checks, status positivo, CTA secundário
+ *   branco #ffffff  → --color-bg        fundo, cards, texto sobre azul/preto
+ *   preto  #000000  → --color-text      títulos, seções escuras, footer
+ * O resto são neutros derivados de preto/branco ou tons mais escuros/claros das cores acima.
+ *
+ * Contraste (WCAG AA, texto ≥ 4.5:1):
+ *   branco sobre primary            6.57  ok
+ *   preto  sobre success            6.62  ok
+ *   branco sobre success            3.17  NÃO USAR (texto)
+ *   branco sobre success-strong     4.96  ok
+ *   success-ink sobre success-soft  5.89  ok
+ *   muted sobre branco 4.99 · muted sobre alt 4.62  ok
+ *   branco/90% sobre primary        5.61  ok
+ *   on-dark-muted sobre preto       8.06  ok
+ */
+:root {
+  /* Marca */
+  --color-primary: 41 63 251;          /* #293ffb */
+  --color-primary-hover: 31 49 214;    /* #1f31d6 (mais escuro) */
+  --color-primary-active: 25 39 176;   /* #1927b0 (ainda mais escuro) */
+  --color-primary-soft: 238 240 255;   /* #eef0ff (mais claro) */
+
+  --color-success: 27 165 102;         /* #1ba566 */
+  --color-success-strong: 20 128 80;   /* #148050 (texto/fundo com branco) */
+  --color-success-ink: 15 107 66;      /* #0f6b42 (texto sobre success-soft) */
+  --color-success-soft: 232 246 239;   /* #e8f6ef */
+
+  --color-bg: 255 255 255;             /* #ffffff */
+  --color-text: 0 0 0;                 /* #000000 */
+
+  /* Neutros */
+  /* Feedback de erro: cor funcional (não é de marca); texto sobre danger-soft: 6.04:1 */
+  --color-danger: 196 22 28;           /* #c4161c */
+  --color-danger-soft: 253 236 236;    /* #fdecec */
+
+  --color-bg-alt: 245 246 250;         /* #f5f6fa */
+  --color-border: 230 232 239;         /* #e6e8ef */
+  --color-text-muted: 107 111 128;     /* #6b6f80 */
+  --color-on-dark-muted: 154 160 180;  /* #9aa0b4 */
+
+  /* Tipografia (escala extraída da referência) */
+  --font-lp: 'Inter Tight', system-ui, -apple-system, sans-serif;
+  --fs-h1: clamp(2.25rem, 1.4rem + 3.6vw, 3.875rem);   /* 36 → 62px */
+  --fs-h2: clamp(1.875rem, 1.3rem + 2.4vw, 2.625rem);  /* 30 → 42px */
+  --fs-h3: clamp(1.5rem, 1.2rem + 1.2vw, 2rem);        /* 24 → 32px */
+  --lh-heading: 1.2;
+  --lh-body: 1.7;
+
+  /* Espaço, raio, sombra */
+  --container-max: 1240px;
+  --section-y: clamp(3.5rem, 2.5rem + 5vw, 6rem);
+  --radius-card: 20px;
+  --radius-image: 24px;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.04), 0 8px 24px rgb(0 0 0 / 0.06);
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+
+}
+
+.lp-root {
+  /* Ponte para os componentes shadcn/ui legados que ainda apareçam em telas públicas */
+  --background: 0 0% 100%; --foreground: 0 0% 0%;
+  --card: 0 0% 100%; --card-foreground: 0 0% 0%;
+  --popover: 0 0% 100%; --popover-foreground: 0 0% 0%;
+  --primary: 234 96% 57%; --primary-foreground: 0 0% 100%;
+  --secondary: 228 33% 97%; --secondary-foreground: 0 0% 0%;
+  --muted: 228 33% 97%; --muted-foreground: 229 9% 46%;
+  --accent: 233 100% 97%; --accent-foreground: 234 96% 40%;
+  --destructive: 358 80% 43%; --destructive-foreground: 0 0% 100%;
+  --border: 227 22% 92%; --input: 227 22% 92%; --ring: 234 96% 57%;
+  --radius: 0.875rem;
+
+  font-family: var(--font-lp);
+  line-height: var(--lh-body);
+  background: rgb(var(--color-bg));
+  color: rgb(var(--color-text));
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Foco visível uniforme */
+.lp-root :where(a, button, [role='tab'], [role='radio'], input, summary):focus-visible {
+  outline: 3px solid rgb(var(--color-primary));
+  outline-offset: 2px;
+}
+.lp-root .lp-on-dark :where(a, button, [role='tab'], [role='radio']):focus-visible {
+  outline-color: rgb(var(--color-bg));
+}
+
+/* Título de seção */
+.lp-h1, .lp-h2, .lp-h3 { font-weight: 800; letter-spacing: -0.02em; line-height: var(--lh-heading); }
+.lp-h1 { font-size: var(--fs-h1); }
+.lp-h2 { font-size: var(--fs-h2); }
+.lp-h3 { font-size: var(--fs-h3); }
+
+/* Entrada dos painéis das abas (resposta a uma ação do usuário) */
+@keyframes lp-fade {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+.lp-fade { animation: lp-fade 0.35s var(--ease-out); }
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-fade { animation: none; }
+}
+
+
+/* Fundo do hero: mistura suave de tons do azul da marca (+ toque de verde), sem linhas.
+   A deriva é lenta e quase imperceptível; desligada com prefers-reduced-motion. */
+.lp-hero-bg {
+  background:
+    radial-gradient(60% 70% at 88% 8%, rgb(var(--color-primary-soft) / 0.22), transparent 62%),
+    radial-gradient(55% 65% at 100% 100%, rgb(var(--color-success) / 0.26), transparent 65%),
+    radial-gradient(70% 80% at 0% 100%, rgb(var(--color-primary-active) / 0.85), transparent 70%),
+    radial-gradient(50% 60% at 40% 0%, rgb(var(--color-primary-hover) / 0.6), transparent 70%),
+    rgb(var(--color-primary));
+  background-size: 150% 150%;
+  background-position: 0% 0%;
+  animation: lp-mesh 40s ease-in-out infinite alternate;
+}
+@keyframes lp-mesh {
+  to { background-position: 100% 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lp-hero-bg { animation: none; }
+}
