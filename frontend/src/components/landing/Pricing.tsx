@@ -1,103 +1,119 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Check } from 'lucide-react';
+import { motion, useReducedMotion } from 'motion/react';
+import { cn } from '@/lib/utils';
 import { PLANS, ANNUAL_DISCOUNT, type Plan } from './content';
-import SectionHeading from './SectionHeading';
+import { CheckList, LpButton, Section } from './ui';
 
 const brl = (v: number) => v.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
-function PlanCard({ plan, annual, index }: { plan: Plan; annual: boolean; index: number }) {
-  const price = annual ? Math.round(plan.monthly * (1 - ANNUAL_DISCOUNT)) : plan.monthly;
-  const hl = plan.highlighted;
+/** Cada plano mantém a sua cor ao girar: fraco (Basic), profundo (Pro) e marca (Premium). Sem preto. */
+const TONES = [
+  { card: 'bg-lp-primary-soft text-lp-black border border-lp-primary/15', soft: 'text-lp-black/70', divider: 'border-lp-primary/20', dark: false, button: 'primary' as const },
+  { card: 'bg-lp-primary-active text-white lp-on-dark', soft: 'text-white/90', divider: 'border-white/25', dark: true, button: 'light' as const },
+  { card: 'bg-lp-primary text-white lp-on-dark', soft: 'text-white/90', divider: 'border-white/25', dark: true, button: 'light' as const },
+];
 
+/** Conteúdo visual do cartão. No plano inativo o botão é só desenho (o cartão inteiro é o botão de selecionar). */
+function PlanBody({ plan, annual, tone, interactive }: { plan: Plan; annual: boolean; tone: (typeof TONES)[number]; interactive: boolean }) {
+  const price = annual ? Math.round(plan.monthly * (1 - ANNUAL_DISCOUNT)) : plan.monthly;
+  const ctaCls = cn(
+    'mt-6 inline-flex h-12 w-full items-center justify-center rounded-full px-7 text-sm font-bold uppercase tracking-[0.05em]',
+    tone.button === 'light' ? 'bg-lp-white text-lp-primary' : 'bg-lp-primary text-white',
+  );
   return (
-    <article
-      className={`reveal relative flex flex-col rounded-3xl p-7 ${
-        hl ? 'border-gradient shadow-xl shadow-landing-petrol/15 lg:-my-4 lg:py-11' : 'border border-landing-line bg-landing-surface'
-      }`}
-      style={{ '--reveal-delay': `${index * 100}ms` } as React.CSSProperties}
-    >
-      {hl && (
-        <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-landing-petrol px-3 py-1 text-[11px] font-semibold text-white">
-          Mais escolhido
-        </span>
-      )}
-      <h3 className="font-display text-lg font-semibold text-landing-ink">{plan.name}</h3>
-      <p className="mt-1.5 text-sm text-landing-muted">{plan.description}</p>
+    <>
+      {plan.highlighted && <span className="absolute -top-3 left-7 rounded-full bg-lp-success px-3 py-1 text-xs font-bold uppercase tracking-[0.05em] text-lp-black">Mais escolhido</span>}
+      <h3 className="text-2xl font-extrabold">{plan.name}</h3>
+      <p className={cn('mt-1.5 text-sm', tone.soft)}>{plan.description}</p>
 
       <p className="mt-6 flex items-baseline gap-1.5">
-        <span className="text-sm text-landing-muted">R$</span>
-        <span className="font-display text-5xl font-bold tracking-tight text-landing-ink">{brl(price)}</span>
-        <span className="text-sm text-landing-muted">/mês</span>
+        <span className={cn('text-sm', tone.soft)}>R$</span>
+        <span className="text-5xl font-extrabold tracking-tight">{brl(price)}</span>
+        <span className={cn('text-sm', tone.soft)}>/mês</span>
       </p>
-      <p className="mt-1 h-4 text-xs text-landing-muted">
-        {annual ? `R$ ${brl(price * 12)} cobrados por ano` : ''}
-      </p>
+      <p className={cn('mt-1 h-5 text-xs', tone.soft)}>{annual ? `R$ ${brl(price * 12)} cobrados por ano` : ''}</p>
 
-      <Link
-        to="/signup"
-        className={`mt-6 inline-flex h-11 items-center justify-center rounded-full text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-landing-petrol focus-visible:ring-offset-2 ${
-          hl ? 'bg-landing-petrol text-white hover:bg-landing-petrol-dark' : 'border border-landing-line bg-landing-surface text-landing-ink hover:border-landing-ink/40'
-        }`}
-      >
-        Começar grátis
-      </Link>
+      {interactive
+        ? <LpButton to="/signup" variant={tone.button} className="mt-6">Começar grátis</LpButton>
+        : <span className={ctaCls} aria-hidden>Começar grátis</span>}
 
-      <ul className="mt-7 space-y-3 border-t border-landing-line pt-6">
-        {plan.features.map(f => (
-          <li key={f} className="flex items-start gap-2.5 text-sm text-landing-ink/85">
-            <Check className="mt-0.5 h-4 w-4 shrink-0 text-landing-petrol" />
-            {f}
-          </li>
-        ))}
-      </ul>
-    </article>
+      <div className={cn('mt-7 border-t pt-6 text-sm', tone.divider)}>
+        <CheckList items={plan.features} onDark={tone.dark} />
+      </div>
+    </>
   );
 }
 
+/**
+ * Carrossel rotativo de planos: o do meio é o selecionado (maior); os dois dos lados têm o mesmo
+ * tamanho, um pouco menor. Clicar em um lado o gira para o centro.
+ */
 export default function Pricing() {
   const [annual, setAnnual] = useState(false);
+  const reduce = useReducedMotion();
+  const n = PLANS.length;
+  const [active, setActive] = useState(Math.max(PLANS.findIndex(p => p.highlighted), 0));
+
+  // esquerda, centro, direita (rotação circular)
+  const order = [(active - 1 + n) % n, active, (active + 1) % n];
 
   return (
-    <section id="planos" className="relative px-4 py-24 sm:py-32">
-      <div className="relative mx-auto max-w-6xl">
-        <SectionHeading
-          badge="Planos"
-          title="Um plano para cada tamanho de equipe"
-          description="Toda conta começa no Trial gratuito, sem cartão. Escolha um plano quando quiser."
-        />
+    <Section id="planos" tone="alt" labelledBy="pricing-title">
+      <h2 id="pricing-title" className="lp-h2 reveal text-center">Um plano para cada tamanho de equipe</h2>
+      <p className="reveal mx-auto mt-4 max-w-xl text-center text-lp-muted">Toda conta começa no Trial gratuito, sem cartão. Escolha um plano quando quiser.</p>
 
-        <div className="reveal mt-10 flex justify-center">
-          <div role="radiogroup" aria-label="Período de cobrança" className="inline-flex items-center rounded-full border border-landing-line bg-landing-surface p-1">
-            {[
-              { v: false, label: 'Mensal' },
-              { v: true, label: 'Anual' },
-            ].map(o => (
-              <button
-                key={o.label}
-                type="button"
-                role="radio"
-                aria-checked={annual === o.v}
-                onClick={() => setAnnual(o.v)}
-                className={`flex items-center gap-2 rounded-full px-5 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-landing-petrol ${
-                  annual === o.v ? 'bg-landing-ink text-white' : 'text-landing-muted hover:text-landing-ink'
-                }`}
-              >
-                {o.label}
-                {o.v && (
-                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${annual ? 'bg-landing-lavender text-landing-ink' : 'bg-landing-lavender/30 text-landing-plum'}`}>
-                    -{ANNUAL_DISCOUNT * 100}%
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="mt-14 grid items-start gap-5 lg:grid-cols-3 lg:items-center">
-          {PLANS.map((p, i) => <PlanCard key={p.name} plan={p} annual={annual} index={i} />)}
+      <div className="reveal mt-8 flex justify-center">
+        <div role="radiogroup" aria-label="Período de cobrança" className="inline-flex rounded-full border border-lp-line bg-lp-white p-1">
+          {[{ v: false, label: 'Mensal' }, { v: true, label: 'Anual' }].map(o => (
+            <button
+              key={o.label}
+              type="button"
+              role="radio"
+              aria-checked={annual === o.v}
+              onClick={() => setAnnual(o.v)}
+              className={cn('flex items-center gap-2 rounded-full px-5 py-2 text-sm font-bold transition-colors', annual === o.v ? 'bg-lp-primary text-white' : 'text-lp-muted hover:text-lp-black')}
+            >
+              {o.label}
+              {o.v && <span className={cn('rounded-full px-2 py-0.5 text-[11px] font-bold', annual ? 'bg-white text-lp-primary' : 'bg-lp-success-soft text-lp-success-ink')}>-{ANNUAL_DISCOUNT * 100}%</span>}
+            </button>
+          ))}
         </div>
       </div>
-    </section>
+
+      <ul className="mt-16 grid items-center gap-6 lg:grid-cols-3 lg:gap-5">
+        {order.map((planIndex, slot) => {
+          const plan = PLANS[planIndex];
+          const tone = TONES[planIndex] ?? TONES[0];
+          const isActive = slot === 1;
+          const shared = cn('relative flex h-full w-full flex-col rounded-lp-card p-7 text-left transition-[transform,box-shadow] duration-500 ease-out', tone.card);
+          return (
+            <motion.li
+              key={plan.name}
+              layout="position"
+              transition={reduce ? { duration: 0 } : { type: 'spring', stiffness: 260, damping: 28 }}
+              className="flex self-stretch lg:self-auto lg:h-[38rem]"
+            >
+              {isActive ? (
+                <article aria-current="true" className={cn(shared, 'z-10 shadow-2xl lg:scale-[1.06] lg:py-9')}>
+                  <PlanBody plan={plan} annual={annual} tone={tone} interactive />
+                </article>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setActive(planIndex)}
+                  aria-label={`Destacar o plano ${plan.name}`}
+                  className={cn(shared, 'cursor-pointer shadow-lp-card hover:shadow-2xl lg:scale-[0.92] lg:hover:scale-[0.94]')}
+                >
+                  <PlanBody plan={plan} annual={annual} tone={tone} interactive={false} />
+                </button>
+              )}
+            </motion.li>
+          );
+        })}
+      </ul>
+
+      <p className="mt-12 text-center text-sm text-lp-muted">Toque em um plano para destacá-lo.</p>
+      <p className="sr-only" aria-live="polite">Plano {PLANS[active].name} em destaque.</p>
+    </Section>
   );
 }

@@ -6,7 +6,8 @@ import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  // src/components/aceternity = código da biblioteca Aceternity UI (vendor), não seguimos o lint nele
+  globalIgnores(['dist', 'src/components/aceternity']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [

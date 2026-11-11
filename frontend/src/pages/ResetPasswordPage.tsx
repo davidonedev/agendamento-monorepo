@@ -71,7 +71,7 @@ export default function ResetPasswordPage() {
               <button
                 type="button" onClick={() => setShowPw(p => !p)}
                 aria-label={showPw ? 'Ocultar senha' : 'Mostrar senha'}
-                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-white/35 transition-colors hover:text-white/70"
+                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-lp-muted transition-colors hover:text-lp-black"
               >
                 {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
@@ -90,7 +90,7 @@ export default function ResetPasswordPage() {
             <AuthAlert kind="error">
               {error}{' '}
               {error.includes('Solicite um novo') && (
-                <Link to="/forgot-password" className="font-medium text-white underline underline-offset-4">Solicitar novo link</Link>
+                <Link to="/forgot-password" className="font-bold text-lp-primary underline underline-offset-4">Solicitar novo link</Link>
               )}
             </AuthAlert>
           )}

@@ -31,7 +31,7 @@ export default function ForgotPasswordPage() {
       {sent ? (
         <div className="space-y-5">
           <AuthAlert kind="success">{sent}</AuthAlert>
-          <p className="text-sm text-white/50">
+          <p className="text-sm text-lp-muted">
             O link vale por 30 minutos e só pode ser usado uma vez. Confira também a caixa de spam.
           </p>
           <Link to="/login" className={authButtonClass}>Voltar ao login</Link>
@@ -53,9 +53,9 @@ export default function ForgotPasswordPage() {
             {loading ? 'Enviando…' : <>Enviar instruções <ArrowRight className="h-4 w-4" /></>}
           </button>
 
-          <p className="pt-2 text-center text-sm text-white/50">
+          <p className="pt-2 text-center text-sm text-lp-muted">
             Não tem mais acesso a esse e-mail?{' '}
-            <Link to="/access-help" className="font-medium text-white underline-offset-4 hover:underline">
+            <Link to="/access-help" className="font-bold text-lp-primary underline-offset-4 hover:underline">
               Pedir ajuda
             </Link>
           </p>
