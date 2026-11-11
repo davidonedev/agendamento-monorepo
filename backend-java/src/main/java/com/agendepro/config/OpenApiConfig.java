@@ -17,7 +17,7 @@ public class OpenApiConfig {
         final String schemeName = "bearerAuth";
         return new OpenAPI()
                 .info(new Info()
-                        .title("AgendePro API")
+                        .title("Nimbo API")
                         .description("SaaS de agendamento multi-tenant para barbearias — backend Java/Spring Boot")
                         .version("1.0.0"))
                 .addSecurityItem(new SecurityRequirement().addList(schemeName))
