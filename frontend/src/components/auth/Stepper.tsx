@@ -15,7 +15,7 @@ export function Stepper({ steps, current }: { steps: string[]; current: number }
                 aria-hidden
                 className={cn(
                   'flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold',
-                  done && 'bg-lp-success text-lp-black',
+                  done && 'bg-lp-success text-white',
                   active && 'bg-lp-primary text-white',
                   !done && !active && 'border border-lp-line bg-lp-alt text-lp-muted',
                 )}

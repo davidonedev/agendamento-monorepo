@@ -110,7 +110,7 @@ export default function BookingDemo() {
                       className={cn(
                         'rounded-xl border-2 py-2.5 text-sm font-bold transition-colors',
                         busy && 'cursor-not-allowed border-transparent bg-lp-line text-lp-muted line-through',
-                        !busy && !selected && 'border-lp-success bg-lp-success-soft text-lp-success-ink hover:bg-lp-success hover:text-lp-black',
+                        !busy && !selected && 'border-lp-success bg-lp-success-soft text-lp-success-ink hover:bg-lp-success hover:text-white',
                         selected && 'border-lp-primary bg-lp-primary text-white',
                       )}
                     >
