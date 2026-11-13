@@ -31,8 +31,7 @@ public class ClientService {
 
     @Transactional(readOnly = true)
     public List<ClientResponse> list(UUID tenantId, String search) {
-        String normalizedSearch = (search == null || search.isBlank()) ? null : search;
-        return clientRepository.search(tenantId, normalizedSearch).stream()
+        return clientRepository.search(tenantId, search).stream()
                 .map(c -> ClientResponse.from(c, appointmentRepository.countByClientId(c.getId())))
                 .toList();
     }

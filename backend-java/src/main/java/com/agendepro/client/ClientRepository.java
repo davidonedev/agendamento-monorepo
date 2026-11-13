@@ -16,17 +16,31 @@ public interface ClientRepository extends JpaRepository<Client, UUID> {
 
     long countByTenantId(UUID tenantId);
 
-    /** Porta do filtro OR (name/email/phone) de listClients (client.controller.ts). */
+    /** Listagem sem filtro de busca. */
+    List<Client> findByTenantIdOrderByNameAsc(UUID tenantId);
+
+    /**
+     * Filtro OR (name/email/phone) de listClients (client.controller.ts), sem diferenciar acentos (extensão unaccent, V7). Só é chamado com termo não nulo:
+     * o padrão ":p IS NULL OR ..." faz o PostgreSQL inferir bytea para o parâmetro nulo (lower(bytea) não existe).
+     * {@code pattern} já vem com '%' e com os curingas do usuário escapados com '!' (ver {@link #search}).
+     */
     @Query("""
             SELECT c FROM Client c
             WHERE c.tenantId = :tenantId
-              AND (:search IS NULL
-                   OR LOWER(c.name) LIKE LOWER(CONCAT('%', :search, '%'))
-                   OR LOWER(c.email) LIKE LOWER(CONCAT('%', :search, '%'))
-                   OR c.phone LIKE CONCAT('%', :search, '%'))
+              AND (LOWER(FUNCTION('unaccent', c.name)) LIKE LOWER(FUNCTION('unaccent', :pattern)) ESCAPE '!'
+                   OR LOWER(FUNCTION('unaccent', c.email)) LIKE LOWER(FUNCTION('unaccent', :pattern)) ESCAPE '!'
+                   OR c.phone LIKE :pattern ESCAPE '!')
             ORDER BY c.name ASC
             """)
-    List<Client> search(@Param("tenantId") UUID tenantId, @Param("search") String search);
+    List<Client> findByTenantIdAndPattern(@Param("tenantId") UUID tenantId, @Param("pattern") String pattern);
+
+    /** Busca por nome, e-mail ou telefone; termo nulo/vazio lista todos os clientes do tenant. */
+    default List<Client> search(UUID tenantId, String search) {
+        String term = search == null ? "" : search.trim();
+        if (term.isEmpty()) return findByTenantIdOrderByNameAsc(tenantId);
+        String escaped = term.replace("!", "!!").replace("%", "!%").replace("_", "!_");
+        return findByTenantIdAndPattern(tenantId, "%" + escaped + "%");
+    }
 
     /** Porta de reminder.controller.ts — clientes com telefone cadastrado. */
     List<Client> findByTenantIdAndPhoneIsNotNullOrderByNameAsc(UUID tenantId);
