@@ -24,6 +24,7 @@ import static com.agendepro.tenant.TenantDtos.*;
 public class TenantController {
 
     private final TenantService tenantService;
+    private final DashboardSummaryService dashboardSummaryService;
 
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<TenantWithCountsResponse>> getMyTenant() {
@@ -33,6 +34,11 @@ public class TenantController {
     @GetMapping("/dashboard")
     public ResponseEntity<ApiResponse<DashboardResponse>> dashboard() {
         return ResponseEntity.ok(ApiResponse.ok(tenantService.dashboard(SecurityUtils.requireTenantId())));
+    }
+
+    @GetMapping("/dashboard/summary")
+    public ResponseEntity<ApiResponse<DashboardSummaryDtos.DashboardSummaryResponse>> dashboardSummary() {
+        return ResponseEntity.ok(ApiResponse.ok(dashboardSummaryService.summary(SecurityUtils.requireTenantId())));
     }
 
     @PatchMapping("/settings")

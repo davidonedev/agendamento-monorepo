@@ -23,6 +23,24 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID>,
 
     long countByTenantId(UUID tenantId);
 
+    /** Agendamentos que mudaram para o status informado na janela [from, to) (usa updatedAt). */
+    long countByTenantIdAndStatusAndUpdatedAtGreaterThanEqualAndUpdatedAtLessThan(
+            UUID tenantId, AppointmentStatus status, java.time.Instant from, java.time.Instant to);
+
+    /** Agendamentos não cancelados entre duas datas (yyyy-MM-dd, inclusive). */
+    List<Appointment> findByTenantIdAndDateBetweenAndStatusNot(UUID tenantId, String from, String to, AppointmentStatus status);
+
+    /** Próximos agendamentos ativos a partir de (today, nowTime), em ordem cronológica. */
+    @Query("""
+            SELECT a FROM Appointment a
+            WHERE a.tenantId = :tenantId AND a.status IN :statuses
+              AND (a.date > :today OR (a.date = :today AND a.startTime >= :nowTime))
+            ORDER BY a.date ASC, a.startTime ASC
+            """)
+    List<Appointment> findUpcoming(@Param("tenantId") UUID tenantId, @Param("statuses") List<AppointmentStatus> statuses,
+                                   @Param("today") String today, @Param("nowTime") String nowTime,
+                                   org.springframework.data.domain.Pageable pageable);
+
     long countByProfessionalId(UUID professionalId);
 
     long countByClientId(UUID clientId);

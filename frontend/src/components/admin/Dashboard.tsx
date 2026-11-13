@@ -1,18 +1,26 @@
 import { useMemo } from 'react';
-import { format, formatDistanceToNow, subHours } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { Users, Calendar, DollarSign, TrendingUp, Clock, CheckCircle, CalendarPlus, XCircle } from 'lucide-react';
+import { format } from 'date-fns';
+import { Users, UserPlus, Calendar, DollarSign, TrendingUp, Clock, CheckCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useTenant } from '@/context/TenantContext';
+import { useDashboardSummary } from '@/hooks/useDashboardSummary';
+import { deltaText } from '@/lib/painel';
+import { TrialCard } from './painel/TrialCard';
+import { WeekStrip } from './painel/WeekStrip';
+import { UpcomingAppointments } from './painel/UpcomingAppointments';
+import { CancellationsCard } from './painel/CancellationsCard';
 import { formatCurrency } from '@/lib/utils';
 
 const STATUS_VARIANT = { confirmed: 'info', completed: 'success', cancelled: 'destructive', pending: 'warning', no_show: 'destructive' } as const;
 const STATUS_LABEL   = { pending: 'Pendente', confirmed: 'Confirmado', completed: 'Concluído', cancelled: 'Cancelado', no_show: 'Não compareceu' };
 
 export default function Dashboard() {
-  const { appointments, clients, professionals, services } = useTenant();
+  const { tenant, appointments, clients, professionals, services } = useTenant();
+  const summary = useDashboardSummary();
+  const bookingUrl = `${window.location.origin}/${tenant.slug}`;
   const today = format(new Date(), 'yyyy-MM-dd');
 
   const stats = useMemo(() => {
@@ -28,50 +36,60 @@ export default function Dashboard() {
     .filter(a => a.date === today && a.status !== 'cancelled')
     .sort((a, b) => a.startTime.localeCompare(b.startTime));
 
-  // Atividade recente: últimas 24h
-  const cutoff24h = subHours(new Date(), 24).toISOString();
+  // Serviços mais agendados (top 5), para o card não crescer sem limite
+  const popularServices = [...services]
+    .map(svc => ({ svc, count: appointments.filter(a => a.serviceId === svc.id && a.status !== 'cancelled').length }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5)
+    .map(x => x.svc);
 
-  const recentNewBookings = appointments
-    .filter(a => a.status !== 'cancelled' && a.createdAt >= cutoff24h)
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-    .slice(0, 10);
-
-  const recentCancellations = appointments
-    .filter(a => a.status === 'cancelled' && (a.updatedAt ?? a.createdAt) >= cutoff24h)
-    .sort((a, b) => (b.updatedAt ?? b.createdAt).localeCompare(a.updatedAt ?? a.createdAt))
-    .slice(0, 10);
+  const s = summary.data;
+  const kpis = [
+    { title: 'Agendamentos Hoje', icon: Calendar,   value: stats.todayAppts.length, sub: `${stats.confirmed} confirmados · ${stats.pending} pendentes` },
+    { title: 'Faturamento Hoje',  icon: DollarSign, value: formatCurrency(stats.todayRev), sub: 'de serviços concluídos' },
+    { title: 'Total de clientes', icon: Users,      value: s?.clients.total ?? 0, sub: s ? `+${s.clients.last7Days} nos últimos 7 dias` : '', loading: summary.loading, error: summary.error },
+    { title: 'Novos clientes',    icon: UserPlus,   value: s?.clients.last7Days ?? 0, sub: s ? deltaText(s.clients.last7Days, s.clients.previous7Days) : '', loading: summary.loading, error: summary.error },
+    { title: 'Receita Total',     icon: TrendingUp, value: formatCurrency(stats.totalRev), sub: `${appointments.filter(a => a.status === 'completed').length} atendimentos` },
+  ].map(k => ({ loading: false, error: false, ...k }));
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold tracking-tight">Painel</h2>
-        <p className="text-muted-foreground">{format(new Date(), "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR })}</p>
+        <p className="text-sm text-muted-foreground">Visão geral do seu negócio</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { title: 'Agendamentos Hoje', icon: Calendar,    value: stats.todayAppts.length, sub: `${stats.confirmed} confirmados · ${stats.pending} pendentes` },
-          { title: 'Faturamento Hoje',  icon: DollarSign,  value: formatCurrency(stats.todayRev), sub: 'de serviços concluídos' },
-          { title: 'Total Clientes',    icon: Users,       value: clients.length,           sub: `${professionals.length} profissionais ativos` },
-          { title: 'Receita Total',     icon: TrendingUp,  value: formatCurrency(stats.totalRev), sub: `${appointments.filter(a => a.status === 'completed').length} atendimentos` },
-        ].map(kpi => {
+      <TrialCard trial={summary.data?.trial} planName={tenant.plan} loading={summary.loading} error={summary.error} onRetry={summary.reload} />
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
+        {kpis.map(kpi => {
           const Icon = kpi.icon;
           return (
             <Card key={kpi.title}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">{kpi.title}</CardTitle>
-                <Icon className="h-4 w-4 text-muted-foreground" />
+                <Icon className="h-4 w-4 text-muted-foreground" aria-hidden />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{kpi.value}</div>
-                <p className="text-xs text-muted-foreground">{kpi.sub}</p>
+                {kpi.loading ? (
+                  <div role="status" aria-label="Carregando"><Skeleton className="h-8 w-20" /><Skeleton className="mt-2 h-3 w-28" /></div>
+                ) : kpi.error ? (
+                  <button type="button" onClick={summary.reload} className="text-sm text-muted-foreground underline underline-offset-2">Tentar novamente</button>
+                ) : (
+                  <>
+                    <div className="text-2xl font-bold">{kpi.value}</div>
+                    <p className="text-xs text-muted-foreground">{kpi.sub}</p>
+                  </>
+                )}
               </CardContent>
             </Card>
           );
         })}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <WeekStrip week={summary.data?.week} today={summary.data?.today} loading={summary.loading} error={summary.error} onRetry={summary.reload} />
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 lg:auto-rows-fr gap-6 [&>*]:h-full">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
@@ -80,9 +98,9 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             {todayAppts.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">Nenhum agendamento hoje</p>
+              <p className="py-8 text-center text-sm text-muted-foreground">Você não tem agendamentos para hoje. Quando um cliente marcar um horário, ele aparece aqui.</p>
             ) : (
-              <div className="space-y-3">
+              <div className="max-h-80 space-y-3 overflow-y-auto">
                 {todayAppts.map(appt => {
                   const client = clients.find(c => c.id === appt.clientId);
                   const prof   = professionals.find(p => p.id === appt.professionalId);
@@ -121,8 +139,9 @@ export default function Dashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
+            {popularServices.length === 0 ? (<p className="py-8 text-center text-sm text-muted-foreground">Ainda não há dados de serviços. Cadastre um serviço para acompanhar os mais agendados.</p>) : (
             <div className="space-y-3">
-              {services.map(svc => {
+              {popularServices.map(svc => {
                 const count   = appointments.filter(a => a.serviceId === svc.id && a.status !== 'cancelled').length;
                 const revenue = appointments.filter(a => a.serviceId === svc.id && a.status === 'completed').reduce((s, a) => s + a.price, 0);
                 return (
@@ -139,95 +158,13 @@ export default function Dashboard() {
                 );
               })}
             </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* ── Atividade Recente (últimas 24h) ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Novos agendamentos */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <CalendarPlus className="h-5 w-5 text-green-600 dark:text-green-400" />
-              Novos Agendamentos
-              <Badge variant="outline" className="ml-auto text-xs font-normal">últimas 24h</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {recentNewBookings.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8 text-sm">Nenhum novo agendamento nas últimas 24h</p>
-            ) : (
-              <div className="space-y-2">
-                {recentNewBookings.map(appt => {
-                  const client = clients.find(c => c.id === appt.clientId);
-                  const svc    = services.find(s => s.id === appt.serviceId);
-                  const ago    = formatDistanceToNow(new Date(appt.createdAt), { locale: ptBR, addSuffix: true });
-                  return (
-                    <div key={appt.id} className="flex items-start gap-3 p-3 rounded-lg border bg-green-50/50 dark:bg-green-900/10 border-green-100 dark:border-green-900/30">
-                      <div className="mt-0.5 p-1.5 rounded-lg bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400 shrink-0">
-                        <CalendarPlus className="h-3.5 w-3.5" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{client?.name ?? '—'}</p>
-                        <p className="text-xs text-muted-foreground truncate">{svc?.name ?? '—'}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {format(new Date(appt.date + 'T00:00:00'), "d 'de' MMM", { locale: ptBR })} às {appt.startTime}
-                        </p>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <Badge variant={appt.status === 'confirmed' ? 'default' : 'outline'} className="text-[10px]">
-                          {STATUS_LABEL[appt.status]}
-                        </Badge>
-                        <p className="text-[10px] text-muted-foreground/60 mt-1">{ago}</p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
             )}
           </CardContent>
         </Card>
 
-        {/* Cancelamentos recentes */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <XCircle className="h-5 w-5 text-red-500 dark:text-red-400" />
-              Cancelamentos
-              <Badge variant="outline" className="ml-auto text-xs font-normal">últimas 24h</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {recentCancellations.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8 text-sm">Nenhum cancelamento nas últimas 24h</p>
-            ) : (
-              <div className="space-y-2">
-                {recentCancellations.map(appt => {
-                  const client = clients.find(c => c.id === appt.clientId);
-                  const svc    = services.find(s => s.id === appt.serviceId);
-                  const ts     = appt.updatedAt ?? appt.createdAt;
-                  const ago    = formatDistanceToNow(new Date(ts), { locale: ptBR, addSuffix: true });
-                  return (
-                    <div key={appt.id} className="flex items-start gap-3 p-3 rounded-lg border bg-red-50/50 dark:bg-red-900/10 border-red-100 dark:border-red-900/30">
-                      <div className="mt-0.5 p-1.5 rounded-lg bg-red-100 dark:bg-red-900/40 text-red-500 dark:text-red-400 shrink-0">
-                        <XCircle className="h-3.5 w-3.5" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{client?.name ?? '—'}</p>
-                        <p className="text-xs text-muted-foreground truncate">{svc?.name ?? '—'}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {format(new Date(appt.date + 'T00:00:00'), "d 'de' MMM", { locale: ptBR })} às {appt.startTime}
-                        </p>
-                      </div>
-                      <p className="text-[10px] text-muted-foreground/60 shrink-0 mt-1">{ago}</p>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <UpcomingAppointments upcoming={summary.data?.upcoming} today={summary.data?.today} bookingUrl={bookingUrl} loading={summary.loading} error={summary.error} onRetry={summary.reload} />
+
+        <CancellationsCard data={summary.data?.cancellations} loading={summary.loading} error={summary.error} onRetry={summary.reload} />
       </div>
     </div>
   );

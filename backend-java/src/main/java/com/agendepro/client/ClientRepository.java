@@ -16,6 +16,9 @@ public interface ClientRepository extends JpaRepository<Client, UUID> {
 
     long countByTenantId(UUID tenantId);
 
+    /** Clientes cadastrados na janela [from, to). */
+    long countByTenantIdAndCreatedAtGreaterThanEqualAndCreatedAtLessThan(UUID tenantId, java.time.Instant from, java.time.Instant to);
+
     /** Listagem sem filtro de busca. */
     List<Client> findByTenantIdOrderByNameAsc(UUID tenantId);
 

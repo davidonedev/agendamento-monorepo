@@ -9,7 +9,7 @@ import { Link } from 'react-router-dom';
 export function Logo({ onDark, to }: { onDark?: boolean; to?: string }) {
   const img = (
     <img
-      src={onDark ? '/images/logo-nimbo-white.png' : '/images/logo-nimbo-dark.png'}
+      src={onDark ? '/images/nimbo-logo-branco.png' : '/images/nimbo-logo-icon.png'}
       alt="Nimbo"
       width={181}
       height={36}
