@@ -7,6 +7,8 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useTenant } from '@/context/TenantContext';
 import { useDashboardSummary } from '@/hooks/useDashboardSummary';
+import { useLoginSkeletonHold } from '@/motion/loginSplashStore';
+import { LinesSkeleton } from './painel/SummaryState';
 import { deltaText } from '@/lib/painel';
 import { TrialCard } from './painel/TrialCard';
 import { WeekStrip } from './painel/WeekStrip';
@@ -20,6 +22,9 @@ const STATUS_LABEL   = { pending: 'Pendente', confirmed: 'Confirmado', completed
 export default function Dashboard() {
   const { tenant, appointments, clients, professionals, services } = useTenant();
   const summary = useDashboardSummary();
+  // Depois da animação da logo no login, o Painel fica ~2 s em skeleton (ver loginSplashStore)
+  const hold = useLoginSkeletonHold();
+  const loading = summary.loading || hold;
   const bookingUrl = `${window.location.origin}/${tenant.slug}`;
   const today = format(new Date(), 'yyyy-MM-dd');
 
@@ -47,10 +52,10 @@ export default function Dashboard() {
   const kpis = [
     { title: 'Agendamentos Hoje', icon: Calendar,   value: stats.todayAppts.length, sub: `${stats.confirmed} confirmados · ${stats.pending} pendentes` },
     { title: 'Faturamento Hoje',  icon: DollarSign, value: formatCurrency(stats.todayRev), sub: 'de serviços concluídos' },
-    { title: 'Total de clientes', icon: Users,      value: s?.clients.total ?? 0, sub: s ? `+${s.clients.last7Days} nos últimos 7 dias` : '', loading: summary.loading, error: summary.error },
-    { title: 'Novos clientes',    icon: UserPlus,   value: s?.clients.last7Days ?? 0, sub: s ? deltaText(s.clients.last7Days, s.clients.previous7Days) : '', loading: summary.loading, error: summary.error },
+    { title: 'Total de clientes', icon: Users,      value: s?.clients.total ?? 0, sub: s ? `+${s.clients.last7Days} nos últimos 7 dias` : '', loading: loading, error: summary.error },
+    { title: 'Novos clientes',    icon: UserPlus,   value: s?.clients.last7Days ?? 0, sub: s ? deltaText(s.clients.last7Days, s.clients.previous7Days) : '', loading: loading, error: summary.error },
     { title: 'Receita Total',     icon: TrendingUp, value: formatCurrency(stats.totalRev), sub: `${appointments.filter(a => a.status === 'completed').length} atendimentos` },
-  ].map(k => ({ loading: false, error: false, ...k }));
+  ].map(k => ({ error: false, ...k, loading: hold || !!k.loading }));
 
   return (
     <div className="space-y-6">
@@ -59,7 +64,7 @@ export default function Dashboard() {
         <p className="text-sm text-muted-foreground">Visão geral do seu negócio</p>
       </div>
 
-      <TrialCard trial={summary.data?.trial} planName={tenant.plan} loading={summary.loading} error={summary.error} onRetry={summary.reload} />
+      <TrialCard trial={summary.data?.trial} planName={tenant.plan} loading={loading} error={summary.error} onRetry={summary.reload} />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
         {kpis.map(kpi => {
@@ -87,7 +92,7 @@ export default function Dashboard() {
         })}
       </div>
 
-      <WeekStrip week={summary.data?.week} today={summary.data?.today} loading={summary.loading} error={summary.error} onRetry={summary.reload} />
+      <WeekStrip week={summary.data?.week} today={summary.data?.today} loading={loading} error={summary.error} onRetry={summary.reload} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 lg:auto-rows-fr gap-6 [&>*]:h-full">
         <Card>
@@ -97,7 +102,7 @@ export default function Dashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {todayAppts.length === 0 ? (
+            {hold ? <LinesSkeleton /> : todayAppts.length === 0 ? (
               <p className="py-8 text-center text-sm text-muted-foreground">Você não tem agendamentos para hoje. Quando um cliente marcar um horário, ele aparece aqui.</p>
             ) : (
               <div className="max-h-80 space-y-3 overflow-y-auto">
@@ -139,7 +144,7 @@ export default function Dashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {popularServices.length === 0 ? (<p className="py-8 text-center text-sm text-muted-foreground">Ainda não há dados de serviços. Cadastre um serviço para acompanhar os mais agendados.</p>) : (
+            {hold ? <LinesSkeleton /> : popularServices.length === 0 ? (<p className="py-8 text-center text-sm text-muted-foreground">Ainda não há dados de serviços. Cadastre um serviço para acompanhar os mais agendados.</p>) : (
             <div className="space-y-3">
               {popularServices.map(svc => {
                 const count   = appointments.filter(a => a.serviceId === svc.id && a.status !== 'cancelled').length;
@@ -162,9 +167,9 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <UpcomingAppointments upcoming={summary.data?.upcoming} today={summary.data?.today} bookingUrl={bookingUrl} loading={summary.loading} error={summary.error} onRetry={summary.reload} />
+        <UpcomingAppointments upcoming={summary.data?.upcoming} today={summary.data?.today} bookingUrl={bookingUrl} loading={loading} error={summary.error} onRetry={summary.reload} />
 
-        <CancellationsCard data={summary.data?.cancellations} loading={summary.loading} error={summary.error} onRetry={summary.reload} />
+        <CancellationsCard data={summary.data?.cancellations} loading={loading} error={summary.error} onRetry={summary.reload} />
       </div>
     </div>
   );
