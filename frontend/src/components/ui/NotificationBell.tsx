@@ -80,7 +80,7 @@ export function NotificationBell({ notifications, unreadCount, markAllRead, acti
     <>
       {/* ── Botão ── */}
       <div className="relative" ref={ref}>
-        <Button variant="ghost" size="icon" onClick={handleToggle} title="Notificações">
+        <Button variant="ghost" size="icon" onClick={handleToggle} title="Notificações" aria-label={unreadCount > 0 ? `Notificações (${unreadCount} novas)` : "Notificações"} aria-expanded={open}>
           <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
             <span className="absolute -top-0.5 -right-0.5 h-[18px] min-w-[18px] px-0.5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none select-none animate-in zoom-in duration-200">
