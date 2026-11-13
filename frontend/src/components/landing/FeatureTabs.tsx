@@ -86,7 +86,7 @@ function ReturnVisual() {
       {rows.map(r => (
         <div key={r.n} className="flex items-center justify-between gap-3 rounded-xl bg-lp-white px-4 py-3">
           <div className="min-w-0"><p className="truncate font-bold">{r.n}</p><p className="truncate text-sm text-lp-black/70">{r.s}, há {r.d}</p></div>
-          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-lp-success px-3 py-1 text-xs font-bold text-lp-black"><MessageCircle className="h-3.5 w-3.5" />Chamar</span>
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-lp-success px-3 py-1 text-xs font-bold text-white"><MessageCircle className="h-3.5 w-3.5" />Chamar</span>
         </div>
       ))}
     </Panel>

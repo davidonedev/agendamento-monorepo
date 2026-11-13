@@ -5,7 +5,6 @@ import Segments from '@/components/landing/Segments';
 import BookingDemo from '@/components/landing/BookingDemo';
 import FeatureTabs from '@/components/landing/FeatureTabs';
 import Benefits from '@/components/landing/Benefits';
-import Stats from '@/components/landing/Stats';
 import HowItWorks from '@/components/landing/HowItWorks';
 import Pricing from '@/components/landing/Pricing';
 import Faq from '@/components/landing/Faq';
@@ -33,7 +32,6 @@ export default function LandingPage() {
         <BookingDemo />
         <FeatureTabs />
         <MidCta />
-        <Stats />
         <HowItWorks />
         <Pricing />
         <Faq />

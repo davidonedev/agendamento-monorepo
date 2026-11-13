@@ -51,7 +51,7 @@ const ADVANTAGES = [
 function PromoCard() {
   return (
     <div className="relative mx-auto w-full max-w-md pt-10 lg:max-w-lg">
-      <div className="absolute right-3 top-0 z-10 flex h-28 w-28 rotate-[10deg] flex-col items-center justify-center rounded-full bg-lp-success text-lp-black shadow-2xl sm:right-6" aria-hidden>
+      <div className="absolute right-3 top-0 z-10 flex h-28 w-28 rotate-[10deg] flex-col items-center justify-center rounded-full bg-lp-success text-white shadow-2xl sm:right-6" aria-hidden>
         <span className="text-4xl font-extrabold leading-none">{ANNUAL_DISCOUNT * 100}%</span>
         <span className="mt-1 text-[11px] font-bold uppercase leading-tight tracking-[0.05em]">off no<br />plano anual</span>
       </div>

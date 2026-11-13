@@ -13,7 +13,7 @@ const VARIANTS: Record<Variant, string> = {
   outline:       'border-2 border-lp-primary text-lp-primary hover:bg-lp-primary-soft active:bg-lp-primary-soft',
   light:         'bg-lp-white text-lp-primary hover:bg-lp-primary-soft active:bg-lp-primary-soft',
   // verde com texto preto (6.62:1); no hover escurece e passa a texto branco (4.96:1)
-  success:       'bg-lp-success text-lp-black hover:bg-lp-success-strong hover:text-white active:bg-lp-success-strong active:text-white',
+  success:       'bg-lp-success text-white hover:bg-lp-success-strong hover:text-white active:bg-lp-success-strong active:text-white',
   'ghost-light': 'border-2 border-white text-white hover:bg-white hover:text-lp-primary',
 };
 const SIZES: Record<Size, string> = { md: 'h-12 px-7', lg: 'h-14 px-9' };

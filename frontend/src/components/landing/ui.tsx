@@ -40,7 +40,7 @@ export function CheckList({ items, onDark }: { items: string[]; onDark?: boolean
     <ul className="space-y-2.5">
       {items.map(item => (
         <li key={item} className="flex items-start gap-3 font-medium">
-          <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-lp-success text-lp-black" aria-hidden>
+          <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-lp-success text-white" aria-hidden>
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-10" /></svg>
           </span>
           <span className={onDark ? 'text-white' : undefined}>{item}</span>

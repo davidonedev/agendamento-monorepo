@@ -395,10 +395,3 @@ export const SEGMENT_BULLETS: Record<SegmentId, string[]> = {
 // ─── Abas de recursos (índice de FEATURES → rótulo curto) ─────────────────────
 export const FEATURE_TAB_LABELS = ['Agendamento 24h', 'Confirmação', 'Equipe', 'Faturamento', 'Serviços', 'Clientes'];
 
-// ─── Faixa de números: só fatos do produto, sem métricas inventadas ───────────
-export const STATS = [
-  { value: '24h',  label: 'de agendamento online, mesmo com o negócio fechado' },
-  { value: '3',    label: 'passos entre criar a conta e receber o primeiro cliente' },
-  { value: 'R$ 0', label: 'de cobrança por agendamento: só a mensalidade fixa' },
-  { value: `R$ ${PLANS[0].monthly}`, label: 'por mês no plano inicial, com Trial grátis antes' },
-];
