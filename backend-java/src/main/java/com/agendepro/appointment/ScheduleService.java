@@ -18,7 +18,9 @@ public class ScheduleService {
 
     /** true se houver conflito de horário (agendamento ou bloqueio) para o profissional. */
     public boolean checkConflict(UUID tenantId, UUID professionalId, String date, String startTime, String endTime, UUID excludeAppointmentId) {
-        boolean appointmentConflict = appointmentRepository.hasConflict(tenantId, professionalId, date, startTime, endTime, excludeAppointmentId);
+        boolean appointmentConflict = excludeAppointmentId == null
+                ? appointmentRepository.hasConflict(tenantId, professionalId, date, startTime, endTime)
+                : appointmentRepository.hasConflictExcluding(tenantId, professionalId, date, startTime, endTime, excludeAppointmentId);
         boolean blockedConflict = blockedSlotRepository.hasConflict(tenantId, professionalId, date, startTime, endTime);
         return appointmentConflict || blockedConflict;
     }

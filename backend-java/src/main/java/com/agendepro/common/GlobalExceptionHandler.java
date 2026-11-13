@@ -4,7 +4,6 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.env.Environment;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpHeaders;
@@ -32,8 +31,6 @@ import java.util.NoSuchElementException;
 @RequiredArgsConstructor
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
-
-    private final Environment environment;
 
     @ExceptionHandler(AppException.class)
     public ResponseEntity<ApiResponse<Void>> handleAppException(AppException ex) {
@@ -78,10 +75,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGeneric(Exception ex) {
         log.error("[ERROR] Erro não tratado", ex);
-        boolean isProd = environment.matchesProfiles("prod");
-        String message = isProd ? "Erro interno do servidor" : ex.getMessage();
+        // Detalhes (SQL, stack) ficam só no log; o cliente recebe mensagem genérica em qualquer perfil.
         return ResponseEntity.status(500)
-                .body(ApiResponse.error(message, "INTERNAL_SERVER_ERROR"));
+                .body(ApiResponse.error("Erro interno do servidor", "INTERNAL_SERVER_ERROR"));
     }
 
     // ─── Overrides do ResponseEntityExceptionHandler (erros de binding do Spring MVC) ───

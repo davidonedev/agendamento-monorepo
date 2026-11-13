@@ -86,7 +86,7 @@ interface TenantContextType extends TenantData {
 const TenantContext = createContext<TenantContextType | null>(null);
 
 export function TenantProvider({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   const [tenant, setTenant]           = useState<Tenant | null>(null);
   const [professionals, setProfessionals] = useState<Professional[]>([]);
@@ -98,9 +98,11 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
   const [productCategories, setProductCategories] = useState<ProductCategory[]>([]);
   const [serviceCategories, setServiceCategories] = useState<ServiceCategory[]>([]);
   const [loading, setLoading]         = useState(true);
+  const [loadError, setLoadError]     = useState(false);
 
   const refresh = useCallback(async () => {
     setLoading(true);
+    setLoadError(false);
     try {
       const [t, profs, svcs, cls, apts, bls, prods] = await Promise.all([
         getMyTenantApi(),
@@ -121,6 +123,9 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
       // Categorias carregadas separadamente — falha não bloqueia o portal
       listCategoriesApi().then(setProductCategories).catch(() => {});
       listServiceCategoriesApi().then(setServiceCategories).catch(() => {});
+    } catch {
+      // Falha de rede/servidor: não é "sem tenant". Mostra erro com ação em vez de tela em branco.
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -147,8 +152,23 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
 
   if (!tenant && !loading) {
     return (
-      <div className="flex h-screen items-center justify-center text-muted-foreground">
-        Tenant não encontrado.
+      <div className="flex h-screen flex-col items-center justify-center gap-4 px-6 text-center" role="alert">
+        <p className="text-lg font-semibold text-foreground">
+          {loadError ? 'Não foi possível carregar os dados do seu estabelecimento.' : 'Não encontramos um estabelecimento vinculado à sua conta.'}
+        </p>
+        <p className="max-w-md text-sm text-muted-foreground">
+          {loadError ? 'Pode ser uma instabilidade temporária. Tente novamente ou saia e entre outra vez.' : 'Saia e entre com outra conta, ou crie uma nova conta para cadastrar seu estabelecimento.'}
+        </p>
+        <div className="flex flex-wrap justify-center gap-3">
+          {loadError && (
+            <button type="button" onClick={() => void refresh()} className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">
+              Tentar novamente
+            </button>
+          )}
+          <button type="button" onClick={logout} className="rounded-md border px-4 py-2 text-sm font-medium">
+            Sair
+          </button>
+        </div>
       </div>
     );
   }
