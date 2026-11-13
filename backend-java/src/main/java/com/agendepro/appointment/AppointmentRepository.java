@@ -54,9 +54,23 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID>,
             WHERE a.tenantId = :tenantId AND a.professionalId = :professionalId AND a.date = :date
               AND a.status <> com.agendepro.appointment.AppointmentStatus.CANCELLED
               AND a.startTime < :endTime AND a.endTime > :startTime
-              AND (:excludeId IS NULL OR a.id <> :excludeId)
             """)
     boolean hasConflict(
+            @Param("tenantId") UUID tenantId,
+            @Param("professionalId") UUID professionalId,
+            @Param("date") String date,
+            @Param("startTime") String startTime,
+            @Param("endTime") String endTime);
+
+    /** Igual a hasConflict, ignorando um agendamento (reagendamento). Sem ":p IS NULL" para não depender da tipagem do parâmetro nulo. */
+    @Query("""
+            SELECT COUNT(a) > 0 FROM Appointment a
+            WHERE a.tenantId = :tenantId AND a.professionalId = :professionalId AND a.date = :date
+              AND a.status <> com.agendepro.appointment.AppointmentStatus.CANCELLED
+              AND a.startTime < :endTime AND a.endTime > :startTime
+              AND a.id <> :excludeId
+            """)
+    boolean hasConflictExcluding(
             @Param("tenantId") UUID tenantId,
             @Param("professionalId") UUID professionalId,
             @Param("date") String date,
