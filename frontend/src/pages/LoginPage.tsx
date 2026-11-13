@@ -1,3 +1,4 @@
+import { showLoginSplash } from '@/motion/loginSplashStore';
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Shield, Store, User, ArrowRight, ArrowLeft, ChevronDown, Zap } from 'lucide-react';
@@ -114,6 +115,7 @@ export default function LoginPage() {
     setLoading(false);
     if (!result.ok) { setError(result.error ?? 'Credenciais inválidas.'); return; }
     setSuccess(true);
+    showLoginSplash();
     navigate(result.redirectTo, { replace: true });
   };
 
@@ -121,7 +123,7 @@ export default function LoginPage() {
     setLoadingDemo(demoEmail); setError('');
     const result = await login(demoEmail, demoPassword);
     setLoadingDemo(null);
-    if (result.ok) navigate(result.redirectTo, { replace: true });
+    if (result.ok) { showLoginSplash(); navigate(result.redirectTo, { replace: true }); }
     else setError(result.error ?? 'Erro ao autenticar.');
   };
 

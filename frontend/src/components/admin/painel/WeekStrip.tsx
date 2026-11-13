@@ -28,7 +28,7 @@ export function WeekStrip({ week, today, loading, error, onRetry }: Props) {
     <Card>
       <CardHeader className="flex flex-row flex-wrap items-baseline justify-between gap-2 space-y-0 pb-3">
         <CardTitle className="text-lg">Próximos 7 dias</CardTitle>
-        {week && <p className="text-sm text-muted-foreground"><strong className="text-foreground">{total}</strong> {total === 1 ? 'agendamento' : 'agendamentos'} na semana</p>}
+        {week && !loading && <p className="text-sm text-muted-foreground"><strong className="text-foreground">{total}</strong> {total === 1 ? 'agendamento' : 'agendamentos'} na semana</p>}
       </CardHeader>
       <CardContent>
         {loading ? (

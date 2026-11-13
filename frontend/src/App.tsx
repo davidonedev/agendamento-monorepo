@@ -47,6 +47,7 @@ import ProfessionalRegisterPage   from './pages/ProfessionalRegisterPage';
 import VerifyEmailPage            from './pages/VerifyEmailPage';
 import TermsPage                  from './pages/TermsPage';
 import PrivacyPage                from './pages/PrivacyPage';
+import { LoginSplashHost }       from './motion/LoginSplashHost';
 
 // ─── Route guards ─────────────────────────────────────────────────────────────
 function SuperGuard({ children }: { children: React.ReactNode }) {
@@ -152,6 +153,7 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <AppRoutes />
+        <LoginSplashHost />
       </AuthProvider>
     </BrowserRouter>
     </GoogleOAuthProvider>
