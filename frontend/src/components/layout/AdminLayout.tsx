@@ -146,8 +146,8 @@ export default function AdminLayout() {
         <div className={`p-4 flex h-14 items-center justify-between ${collapsed ? 'md:justify-center md:px-0' : ''}`}>
           <Link to="/admin/dashboard" onClick={() => setOpen(false)} aria-label="Nimbo — ir para o Painel" className="flex items-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
             <span className={hideWhenCollapsed}>
-              <img src="/images/logo-nimbo-dark.png" alt="Nimbo" width={181} height={36} className="h-8 w-auto dark:hidden" />
-              <img src="/images/logo-nimbo-white.png" alt="Nimbo" width={181} height={36} className="hidden h-8 w-auto dark:block" />
+              <img src="/images/nimbo-logo-icon.png" alt="Nimbo" width={181} height={36} className="h-8 w-auto dark:hidden" />
+              <img src="/images/nimbo-logo-branco.png" alt="Nimbo" width={181} height={36} className="hidden h-8 w-auto dark:block" />
             </span>
             {collapsed && (
               <img src="/images/favicon-32.png" alt="Nimbo" width={32} height={32} className="hidden h-8 w-8 rounded-lg md:block" />
